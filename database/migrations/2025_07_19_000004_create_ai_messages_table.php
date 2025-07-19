@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('ai_messages', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('ai_chat_id')->constrained()->onDelete('cascade');
+            $table->enum('role', ['user', 'assistant', 'system']);
+            $table->text('content');
+            $table->json('metadata')->nullable(); // Store additional data like tokens, model used, etc.
+            $table->integer('tokens_used')->nullable();
+            $table->timestamps();
+            
+            $table->index(['ai_chat_id', 'created_at']);
+            $table->index(['role', 'created_at']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('ai_messages');
+    }
+};
