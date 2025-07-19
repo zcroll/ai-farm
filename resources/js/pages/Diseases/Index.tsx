@@ -1,218 +1,281 @@
-import React, { useState, useEffect } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
-import AppSidebarLayout from '@/layouts/app/app-sidebar-layout';
+import React, { useState } from 'react';
+import { Head, Link } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Leaf } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertTriangle, CheckCircle, Search, Filter, Calendar, BarChart3 } from 'lucide-react';
 
-interface Disease {
+interface DiagnosedDisease {
+  id: number;
+  name: string;
+  description: string;
+  treatment_suggestions: string;
+  severity_level: string;
+  average_treatment_time: number;
+  plant_type: string;
+  detection_count: number;
+  last_detected: string;
+  confidence_avg: number;
+  scans: Array<{
     id: number;
-    name: string;
-    plant_type: string;
-    description: string;
-    severity_level: string;
-    average_treatment_time: number;
+    image_path: string;
+    confidence: number;
+    created_at: string;
+  }>;
 }
 
-interface Props {
-    diseases: {
-        data: Disease[];
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-    };
-    plantTypes: string[];
-    filters: {
-        search?: string;
-        plant_type?: string;
-    };
+interface DiagnosedDiseasesProps {
+  diagnosedDiseases: DiagnosedDisease[];
+  stats: {
+    total_detections: number;
+    unique_diseases: number;
+    healthy_detections: number;
+    diseased_detections: number;
+  };
 }
 
-export default function DiseaseLibrary({ diseases, plantTypes, filters }: Props) {
-    const [search, setSearch] = useState(filters.search || '');
-    const [plantType, setPlantType] = useState(filters.plant_type || 'all');
-    const [debouncedSearch, setDebouncedSearch] = useState(search);
+const DiagnosedDiseases: React.FC<DiagnosedDiseasesProps> = ({ diagnosedDiseases, stats }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [severityFilter, setSeverityFilter] = useState('all');
+  const [plantTypeFilter, setPlantTypeFilter] = useState('all');
 
-    // Debounce search
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(search);
-        }, 500);
+  // Filter diseases based on search and filters
+  const filteredDiseases = diagnosedDiseases.filter(disease => {
+    const matchesSearch = disease.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         disease.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSeverity = severityFilter === 'all' || disease.severity_level === severityFilter;
+    const matchesPlantType = plantTypeFilter === 'all' || disease.plant_type === plantTypeFilter;
+    
+    return matchesSearch && matchesSeverity && matchesPlantType;
+  });
 
-        return () => clearTimeout(timer);
-    }, [search]);
+  const formatDiseaseName = (name: string) => {
+    return name.replace(/_/g, ' ').replace('___', ' - ');
+  };
 
-    // Update URL when filters change
-    useEffect(() => {
-        const params = new URLSearchParams();
-        if (debouncedSearch) params.set('search', debouncedSearch);
-        if (plantType && plantType !== 'all') params.set('plant_type', plantType);
+  const getSeverityColor = (severity: string) => {
+    switch (severity.toLowerCase()) {
+      case 'high': return 'destructive';
+      case 'medium': return 'secondary';
+      case 'low': return 'default';
+      default: return 'outline';
+    }
+  };
 
-        router.get('/diseases', params.toString(), {
-            preserveState: true,
-            replace: true,
-        });
-    }, [debouncedSearch, plantType]);
+  const getHealthStatus = (disease: DiagnosedDisease) => {
+    return disease.name.toLowerCase().includes('healthy') ? 'healthy' : 'diseased';
+  };
 
-    const getSeverityColor = (severity: string) => {
-        switch (severity?.toLowerCase()) {
-            case 'high':
-                return 'bg-red-100 text-red-800';
-            case 'medium':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'low':
-                return 'bg-green-100 text-green-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    };
+  const getHealthIcon = (disease: DiagnosedDisease) => {
+    return getHealthStatus(disease) === 'healthy' ? CheckCircle : AlertTriangle;
+  };
 
-    const formatPlantType = (type: string) => {
-        return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    };
+  const getHealthColor = (disease: DiagnosedDisease) => {
+    return getHealthStatus(disease) === 'healthy' ? 'text-green-500' : 'text-amber-500';
+  };
 
-    return (
-        <AppSidebarLayout>
-            <Head title="Disease Library" />
-
-            <div className="space-y-6">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Disease Library</h1>
-                        <p className="text-gray-600 mt-2">
-                            Comprehensive guide to plant diseases, symptoms, and treatments
-                        </p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Leaf className="h-8 w-8 text-green-600" />
-                    </div>
-                </div>
-
-                {/* Filters */}
-                <Card>
-                    <CardContent className="p-6">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                    <Input
-                                        placeholder="Search diseases..."
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        className="pl-10"
-                                    />
-                                </div>
-                            </div>
-                            <div className="w-full sm:w-48">
-                                <Select value={plantType} onValueChange={setPlantType}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Plant Type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Plants</SelectItem>
-                                        {plantTypes.map((type) => (
-                                            <SelectItem key={type} value={type}>
-                                                {formatPlantType(type)}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Results Count */}
-                <div className="flex items-center justify-between">
-                    <p className="text-gray-600">
-                        Showing {diseases.data.length} of {diseases.total} diseases
-                    </p>
-                </div>
-
-                {/* Disease Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {diseases.data.map((disease) => (
-                        <Card key={disease.id} className="hover:shadow-lg transition-shadow">
-                            <CardHeader className="pb-3">
-                                <div className="flex items-start justify-between">
-                                    <CardTitle className="text-lg font-semibold text-gray-900">
-                                        {disease.name.replace(/_/g, ' ')}
-                                    </CardTitle>
-                                    <Badge className={getSeverityColor(disease.severity_level)}>
-                                        {disease.severity_level || 'Unknown'}
-                                    </Badge>
-                                </div>
-                                <p className="text-sm text-gray-600">
-                                    {formatPlantType(disease.plant_type)}
-                                </p>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-gray-700 text-sm line-clamp-3 mb-4">
-                                    {disease.description}
-                                </p>
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm text-gray-500">
-                                        {disease.average_treatment_time ? (
-                                            <span>~{disease.average_treatment_time} days treatment</span>
-                                        ) : (
-                                            <span>Treatment time varies</span>
-                                        )}
-                                    </div>
-                                    <Link href={`/diseases/${disease.id}`}>
-                                        <Button variant="outline" size="sm">
-                                            View Details
-                                        </Button>
-                                    </Link>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-
-                {/* Pagination */}
-                {diseases.last_page > 1 && (
-                    <div className="flex items-center justify-center space-x-2">
-                        {diseases.current_page > 1 && (
-                            <Button
-                                variant="outline"
-                                onClick={() => router.get('/diseases', { page: diseases.current_page - 1, ...filters })}
-                            >
-                                Previous
-                            </Button>
-                        )}
-                        
-                        <span className="text-sm text-gray-600">
-                            Page {diseases.current_page} of {diseases.last_page}
-                        </span>
-                        
-                        {diseases.current_page < diseases.last_page && (
-                            <Button
-                                variant="outline"
-                                onClick={() => router.get('/diseases', { page: diseases.current_page + 1, ...filters })}
-                            >
-                                Next
-                            </Button>
-                        )}
-                    </div>
-                )}
-
-                {diseases.data.length === 0 && (
-                    <Card>
-                        <CardContent className="p-12 text-center">
-                            <Leaf className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">No diseases found</h3>
-                            <p className="text-gray-600">
-                                Try adjusting your search criteria or filters
-                            </p>
-                        </CardContent>
-                    </Card>
-                )}
+  return (
+    <AppLayout>
+      <Head title="Diagnosed Diseases" />
+      
+      <div className="py-6 px-4 sm:px-6 lg:px-8 bg-black min-h-screen">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div>
+              <h1 className="text-2xl font-bold text-white">Diagnosed Diseases</h1>
+              <p className="text-gray-400">Diseases detected through your plant scans</p>
             </div>
-        </AppSidebarLayout>
-    );
-}
+            
+            <div className="flex gap-2">
+              <Link href="/predictions/create">
+                <Button className="bg-green-600 hover:bg-green-700">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  New Scan
+                </Button>
+              </Link>
+              <Link href="/disease-library">
+                <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Disease Library
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-gray-400">Total Detections</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-white">{stats.total_detections}</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-gray-400">Unique Diseases</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-white">{stats.unique_diseases}</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-gray-400">Healthy Detections</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-500">{stats.healthy_detections}</div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-gray-400">Diseased Detections</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-amber-500">{stats.diseased_detections}</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search diagnosed diseases..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-gray-900 border-gray-700 text-white"
+                />
+              </div>
+            </div>
+            
+            <Select value={severityFilter} onValueChange={setSeverityFilter}>
+              <SelectTrigger className="w-full sm:w-48 bg-gray-900 border-gray-700 text-white">
+                <SelectValue placeholder="Filter by severity" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-gray-700">
+                <SelectItem value="all">All Severities</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={plantTypeFilter} onValueChange={setPlantTypeFilter}>
+              <SelectTrigger className="w-full sm:w-48 bg-gray-900 border-gray-700 text-white">
+                <SelectValue placeholder="Filter by plant type" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-900 border-gray-700">
+                <SelectItem value="all">All Plants</SelectItem>
+                {Array.from(new Set(diagnosedDiseases.map(d => d.plant_type))).map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Diseases Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredDiseases.length > 0 ? (
+              filteredDiseases.map((disease) => {
+                const HealthIcon = getHealthIcon(disease);
+                const healthColor = getHealthColor(disease);
+                
+                return (
+                  <Card key={disease.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <Badge variant={getSeverityColor(disease.severity_level)} className="text-xs">
+                          {disease.severity_level}
+                        </Badge>
+                        <HealthIcon className={`h-5 w-5 ${healthColor}`} />
+                      </div>
+                      <CardTitle className="text-lg text-white">
+                        {formatDiseaseName(disease.name)}
+                      </CardTitle>
+                      <p className="text-sm text-gray-400">
+                        {disease.plant_type}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-gray-300 mb-4 line-clamp-3">
+                        {disease.description}
+                      </p>
+                      
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-400">Detections:</span>
+                          <span className="text-white font-medium">{disease.detection_count}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-400">Avg Confidence:</span>
+                          <span className="text-white font-medium">{Math.round(disease.confidence_avg * 100)}%</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-400">Treatment Time:</span>
+                          <span className="text-white font-medium">{disease.average_treatment_time} days</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1 border-gray-700 text-white hover:bg-gray-800"
+                          onClick={() => window.open(`/diseases/${disease.id}`, '_blank')}
+                        >
+                          View Details
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="border-gray-700 text-white hover:bg-gray-800"
+                          onClick={() => window.open(`/history?disease=${disease.id}`, '_blank')}
+                        >
+                          View Scans
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            ) : (
+              <div className="col-span-full">
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardContent className="text-center py-12">
+                    <AlertTriangle className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-semibold text-white mb-2">No diagnosed diseases found</h3>
+                    <p className="text-gray-400 mb-4">
+                      {searchTerm || severityFilter !== 'all' || plantTypeFilter !== 'all' 
+                        ? 'Try adjusting your filters or search terms.'
+                        : 'Start scanning your plants to detect diseases and see them here.'
+                      }
+                    </p>
+                    <Link href="/predictions/create">
+                      <Button className="bg-green-600 hover:bg-green-700">
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        Start Scanning
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </AppLayout>
+  );
+};
+
+export default DiagnosedDiseases;
