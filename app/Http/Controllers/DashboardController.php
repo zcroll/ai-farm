@@ -40,7 +40,7 @@ class DashboardController extends Controller
             'commonDiseases' => $commonDiseases,
         ];
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render('dashboard', [
             'auth' => $user,
             'stats' => $stats,
             'history' => $scans,
