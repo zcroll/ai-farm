@@ -14,8 +14,8 @@ class AIChatSeeder extends Seeder
         $users = User::all();
         
         if ($users->isEmpty()) {
-            $this->command->info('No users found. Creating sample users first...');
-            $users = User::factory(3)->create();
+            $this->command->info('No users found. Please run DatabaseSeeder first to create users.');
+            return;
         }
 
         $chatTemplates = [

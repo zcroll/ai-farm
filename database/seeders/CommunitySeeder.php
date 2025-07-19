@@ -14,8 +14,8 @@ class CommunitySeeder extends Seeder
         $users = User::all();
         
         if ($users->isEmpty()) {
-            $this->command->info('No users found. Creating sample users first...');
-            $users = User::factory(5)->create();
+            $this->command->info('No users found. Please run DatabaseSeeder first to create users.');
+            return;
         }
 
         $posts = [

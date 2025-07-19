@@ -20,7 +20,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Disease Library',
-        href: '/disease-library',
+        href: '/diseases',
         icon: Database,
     },
     {

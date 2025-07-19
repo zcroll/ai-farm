@@ -5,6 +5,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\AIChatController;
+use App\Http\Controllers\DiseaseController;
+use App\Http\Controllers\PredictionController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -36,7 +38,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Plant disease detection specific routes
     Route::get('/history', [DashboardController::class, 'history'])->name('history');
     Route::get('/scan/{id}', [DashboardController::class, 'showScan'])->name('scan.show');
-    Route::get('/disease-library', [DashboardController::class, 'diseaseLibrary'])->name('disease.library');
+    
+    // Disease Library routes
+    Route::get('/diseases', [DiseaseController::class, 'index'])->name('diseases.index');
+    Route::get('/diseases/{disease}', [DiseaseController::class, 'show'])->name('diseases.show');
     
     // Community routes
     Route::resource('community', PostController::class)->names([
@@ -64,6 +69,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'destroy' => 'ai-chat.destroy',
     ]);
     Route::post('/ai-chat/{chat}/message', [AIChatController::class, 'sendMessage'])->name('ai-chat.message');
+    
+    // Prediction routes
+    Route::post('/predictions', [PredictionController::class, 'store'])->name('predictions.store');
 });
 
 // Settings routes
@@ -74,13 +82,3 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
-
-
-Route::resource('predictions', App\Http\Controllers\PredictionController::class)->only('store');
-
-Route::resource('dashboards', App\Http\Controllers\DashboardController::class)->only('index');
-
-
-Route::resource('predictions', App\Http\Controllers\PredictionController::class)->only('store');
-
-Route::resource('dashboards', App\Http\Controllers\DashboardController::class)->only('index');

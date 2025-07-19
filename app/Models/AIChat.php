@@ -11,6 +11,8 @@ class AIChat extends Model
 {
     use HasFactory;
 
+    protected $table = 'ai_chats';
+
     protected $fillable = [
         'user_id',
         'title',
