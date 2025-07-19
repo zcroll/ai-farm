@@ -51,4 +51,28 @@ class User extends Authenticatable
     {
         return $this->hasMany(Scan::class);
     }
+
+    /**
+     * Get the posts created by the user.
+     */
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    /**
+     * Get the comments created by the user.
+     */
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Get the AI chats created by the user.
+     */
+    public function aiChats(): HasMany
+    {
+        return $this->hasMany(AIChat::class);
+    }
 }

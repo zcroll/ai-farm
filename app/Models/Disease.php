@@ -18,9 +18,16 @@ class Disease extends Model
     protected $fillable = [
         'name',
         'description',
+        'symptoms',
+        'causes',
+        'detailed_images',
         'scientific_details',
         'treatment_suggestions',
+        'treatment_steps',
+        'chemical_treatments',
+        'organic_treatments',
         'prevention_methods',
+        'monitoring_guidelines',
         'required_tools',
         'environmental_factors',
         'severity_level',
@@ -29,6 +36,7 @@ class Disease extends Model
         'seasonal_prevalence',
         'statistics',
         'source_url',
+        'views_count',
     ];
 
     /**
@@ -43,6 +51,8 @@ class Disease extends Model
             'average_treatment_time' => 'float',
             'seasonal_prevalence' => 'array',
             'statistics' => 'array',
+            'detailed_images' => 'array',
+            'views_count' => 'integer',
         ];
     }
 
@@ -52,6 +62,22 @@ class Disease extends Model
     public function scans(): HasMany
     {
         return $this->hasMany(Scan::class);
+    }
+
+    /**
+     * Get the posts related to this disease.
+     */
+    public function posts(): HasMany
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    /**
+     * Increment the view count.
+     */
+    public function incrementViews(): void
+    {
+        $this->increment('views_count');
     }
     
     /**

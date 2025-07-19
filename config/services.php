@@ -14,6 +14,13 @@ return [
     |
     */
 
+    'mailgun' => [
+        'domain' => env('MAILGUN_DOMAIN'),
+        'secret' => env('MAILGUN_SECRET'),
+        'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+        'scheme' => 'https',
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
@@ -24,15 +31,24 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'resend' => [
-        'key' => env('RESEND_KEY'),
-    ],
+    /*
+    |--------------------------------------------------------------------------
+    | AI Services Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for AI services used in the application.
+    | You can configure different AI providers here.
+    |
+    */
 
-    'slack' => [
-        'notifications' => [
-            'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
-            'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
-        ],
+    'ai' => [
+        'provider' => env('AI_PROVIDER', 'openai'),
+        'endpoint' => env('AI_ENDPOINT', 'https://api.openai.com/v1/chat/completions'),
+        'api_key' => env('AI_API_KEY'),
+        'model' => env('AI_MODEL', 'gpt-3.5-turbo'),
+        'max_tokens' => env('AI_MAX_TOKENS', 1000),
+        'temperature' => env('AI_TEMPERATURE', 0.7),
+        'timeout' => env('AI_TIMEOUT', 30),
     ],
 
 ];
