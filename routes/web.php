@@ -40,7 +40,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/scan/{id}', [DashboardController::class, 'showScan'])->name('scan.show');
     
     // Disease Library routes
-    Route::get('/diseases', [DiseaseController::class, 'index'])->name('diseases.index');
+    Route::get('/diseases', [DiseaseController::class, 'diagnosed'])->name('diseases.index');
+    Route::get('/disease-library', [DiseaseController::class, 'index'])->name('disease.library');
     Route::get('/diseases/{disease}', [DiseaseController::class, 'show'])->name('diseases.show');
     
     // Community routes

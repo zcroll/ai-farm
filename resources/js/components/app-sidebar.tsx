@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Users, MessageSquare, History, Database } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Users, MessageSquare, History, Database, Leaf, Bot } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -19,8 +19,13 @@ const mainNavItems: NavItem[] = [
         icon: History,
     },
     {
-        title: 'Disease Library',
+        title: 'Diagnosed Diseases',
         href: '/diseases',
+        icon: Leaf,
+    },
+    {
+        title: 'Disease Library',
+        href: '/disease-library',
         icon: Database,
     },
     {
@@ -31,7 +36,7 @@ const mainNavItems: NavItem[] = [
     {
         title: 'AI Chat',
         href: '/ai-chat',
-        icon: MessageSquare,
+        icon: Bot,
     },
 ];
 

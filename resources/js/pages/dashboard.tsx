@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Leaf, AlertTriangle, CheckCircle, BarChart3 } from 'lucide-react';
+import { Leaf, AlertTriangle, CheckCircle, BarChart3, Database } from 'lucide-react';
 import axios from 'axios';
 import DiseaseDashboard from '@/components/dashboard/disease-dashboard';
 
@@ -314,7 +314,66 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
             </TabsContent>
             
             <TabsContent value="statistics" className="space-y-6">
-              <DiseaseDashboard diseases={diseases} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardHeader>
+                    <CardTitle className="text-white">Diagnosed Diseases</CardTitle>
+                    <p className="text-sm text-gray-400">Diseases detected through your scans</p>
+                  </CardHeader>
+                  <CardContent>
+                    {diseases.length > 0 ? (
+                      <div className="space-y-4">
+                        {diseases.map((disease) => (
+                          <div key={disease.id} className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              {disease.name.toLowerCase().includes('healthy') ? (
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                              ) : (
+                                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                              )}
+                              <div>
+                                <p className="text-sm font-medium text-white">
+                                  {formatDiseaseName(disease.name)}
+                                </p>
+                                <p className="text-xs text-gray-400">{disease.plant_type}</p>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {disease.severity_level}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-400">No diseases detected yet</p>
+                        <p className="text-sm text-gray-500 mt-2">Start scanning your plants to see diagnosed diseases here</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+                
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardHeader>
+                    <CardTitle className="text-white">Disease Library</CardTitle>
+                    <p className="text-sm text-gray-400">Complete reference for all plant diseases</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-300">
+                        Access our comprehensive disease library with detailed information about symptoms, treatments, and prevention methods.
+                      </p>
+                      <Link href="/disease-library">
+                        <Button className="w-full bg-green-600 hover:bg-green-700">
+                          <Database className="h-4 w-4 mr-2" />
+                          View Disease Library
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
