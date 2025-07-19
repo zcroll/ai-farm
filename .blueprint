@@ -1,0 +1,23 @@
+created:
+    - app/Http/Controllers/PredictionController.php
+    - app/Http/Controllers/DashboardController.php
+    - database/factories/DiseaseFactory.php
+    - database/factories/ScanFactory.php
+    - database/factories/UserFactory.php
+    - database/migrations/2025_07_15_111406_create_diseases_table.php
+    - database/migrations/2025_07_15_111407_create_scans_table.php
+    - database/migrations/2025_07_15_111408_create_users_table.php
+    - app/Models/Disease.php
+    - app/Models/Scan.php
+    - app/Models/User.php
+    - database/seeders/DiseaseSeeder.php
+    - tests/Feature/Http/Controllers/PredictionControllerTest.php
+    - tests/Feature/Http/Controllers/DashboardControllerTest.php
+    - app/Http/Requests/PredictionStoreRequest.php
+    - app/Jobs/ProcessPrediction.php
+updated:
+    - routes/web.php
+models:
+    Disease: { id: id, name: 'string:255,unique', description: text, treatment_suggestions: text, source_url: 'string:255,nullable', timestamps: timestamps }
+    Scan: { id: id, image_path: 'string:25f5', predicted_disease: 'string:255', confidence: 'float:5,2', timestamps: timestamps, relationships: { belongsTo: 'User, Disease' } }
+    User: { relationships: { hasMany: Scan } }
