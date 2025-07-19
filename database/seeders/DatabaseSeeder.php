@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
         // Seed diseases
         $this->call([
             DiseaseSeeder::class,
+            CommunitySeeder::class,
+            AIChatSeeder::class,
         ]);
     }
 }
