@@ -3,10 +3,17 @@ import { AppShell } from '@/components/app-shell';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import AIChatWidget from '@/components/ai-chat-widget';
+import QuickScanFab from '@/components/quick-scan-fab';
 import { type BreadcrumbItem } from '@/types';
 import { type PropsWithChildren } from 'react';
+import { usePage } from '@inertiajs/react';
 
 export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
+    const { url } = usePage();
+    
+    // Don't show the FAB on the scan page itself
+    const showQuickScanFab = !url.startsWith('/scan');
+
     return (
         <>
             <AppShell variant="sidebar">
@@ -17,6 +24,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                 </AppContent>
             </AppShell>
             <AIChatWidget />
+            {showQuickScanFab && <QuickScanFab />}
         </>
     );
 }

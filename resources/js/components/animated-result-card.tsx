@@ -154,7 +154,7 @@ export const AnimatedResultCard: React.FC<AnimatedResultCardProps> = ({
         </motion.div>
       </MotionCardContent>
       
-      <CardFooter className="flex justify-between p-6 bg-black border-t border-gray-800">
+      <CardFooter className="flex flex-wrap gap-3 p-6 bg-black border-t border-gray-800">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -170,34 +170,50 @@ export const AnimatedResultCard: React.FC<AnimatedResultCardProps> = ({
           </Button>
         </motion.div>
         
-        {disease.source_url && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.5 }}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+        >
+          <Button 
+            variant="default"
+            onClick={() => window.location.href = `/scan/${scan.id}`}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
           >
-            <Button 
-              variant="default"
-              onClick={() => window.open(disease.source_url!, '_blank')}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-            >
-              Learn More
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </motion.div>
-        )}
+            View Full Details
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </motion.div>
+
         {disease.id && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1, duration: 0.5 }}
+            transition={{ delay: 1.1, duration: 0.5 }}
           >
             <Button 
               variant="default"
               onClick={() => window.location.href = `/diseases/${disease.id}`}
               className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
             >
-              View Details
+              Disease Library
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        )}
+        
+        {disease.source_url && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2, duration: 0.5 }}
+          >
+            <Button 
+              variant="outline"
+              onClick={() => window.open(disease.source_url!, '_blank')}
+              className="flex items-center gap-2 border-gray-700 text-white hover:bg-gray-800"
+            >
+              Learn More
               <ArrowRight className="h-4 w-4" />
             </Button>
           </motion.div>

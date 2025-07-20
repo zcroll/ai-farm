@@ -36,6 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Plant disease detection specific routes
+    Route::get('/scan', [DashboardController::class, 'scan'])->name('scan');
     Route::get('/history', [DashboardController::class, 'history'])->name('history');
     Route::get('/scan/{id}', [DashboardController::class, 'showScan'])->name('scan.show');
     
@@ -73,6 +74,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Prediction routes
     Route::post('/predictions', [PredictionController::class, 'store'])->name('predictions.store');
+});
+
+// API routes for AJAX requests
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/test-model', [PredictionController::class, 'testModel'])->name('api.test-model');
 });
 
 // Settings routes
