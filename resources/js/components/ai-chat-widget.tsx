@@ -76,7 +76,8 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '' }) => {
 
     try {
       const response = await axios.post('/ai-chat/message', {
-        message: userMessage.content
+        message: userMessage.content,
+        model: 'gemini-2.0-flash',
       }, {
         headers: {
           'Content-Type': 'application/json',
