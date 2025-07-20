@@ -66,6 +66,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/community/{post}/like', [PostController::class, 'like'])->name('posts.like');
     Route::post('/community/{post}/bookmark', [PostController::class, 'bookmark'])->name('posts.bookmark');
     
+    // API routes for AJAX requests
+    Route::prefix('api')->group(function () {
+        Route::post('/posts/{post}/like', [\App\Http\Controllers\Api\CommunityController::class, 'likePost']);
+        Route::post('/posts/{post}/bookmark', [\App\Http\Controllers\Api\CommunityController::class, 'bookmarkPost']);
+        Route::post('/comments/{comment}/like', [\App\Http\Controllers\Api\CommunityController::class, 'likeComment']);
+        Route::get('/posts', [\App\Http\Controllers\Api\CommunityController::class, 'getPosts']);
+        Route::get('/posts/{post}/comments', [\App\Http\Controllers\Api\CommunityController::class, 'getComments']);
+        Route::get('/posts/search', [\App\Http\Controllers\Api\CommunityController::class, 'searchPosts']);
+        Route::get('/user/stats', [\App\Http\Controllers\Api\CommunityController::class, 'getUserStats']);
+    });
+    
     // AI Chat routes
     Route::resource('ai-chat', AIChatController::class)->names([
         'index' => 'ai-chat.index',

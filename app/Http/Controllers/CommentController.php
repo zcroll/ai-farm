@@ -65,36 +65,8 @@ class CommentController extends Controller
     public function like(Request $request, Comment $comment)
     {
         $user = Auth::user();
-        
-        // Check if user already liked this comment
-        $existingLike = DB::table('comment_likes')
-            ->where('comment_id', $comment->id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if ($existingLike) {
-            // Unlike the comment
-            DB::table('comment_likes')
-                ->where('comment_id', $comment->id)
-                ->where('user_id', $user->id)
-                ->delete();
-            
-            $isLiked = false;
-        } else {
-            // Like the comment
-            DB::table('comment_likes')->insert([
-                'comment_id' => $comment->id,
-                'user_id' => $user->id,
-                'created_at' => now(),
-            ]);
-            
-            $isLiked = true;
-        }
-
-        // Get updated like count
-        $likesCount = DB::table('comment_likes')
-            ->where('comment_id', $comment->id)
-            ->count();
+        $isLiked = $comment->toggleLike($user);
+        $likesCount = $comment->likes()->count();
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -103,6 +75,6 @@ class CommentController extends Controller
             ]);
         }
 
-        return back();
+        return back()->with('success', $isLiked ? 'Comment liked!' : 'Comment unliked!');
     }
 }

@@ -14,66 +14,119 @@ class PostController extends Controller
     {
         $query = Post::with(['user', 'comments'])
             ->published()
-            ->orderBy('is_pinned', 'desc')
-            ->orderBy('created_at', 'desc');
-
-        // Filter by category
-        if ($request->has('category') && $request->category !== 'all') {
-            $query->byCategory($request->category);
-        }
+            ->withStats()
+            ->orderBy('is_pinned', 'desc');
 
         // Search functionality
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('content', 'like', "%{$search}%");
-            });
+        if ($request->filled('search')) {
+            $query->search($request->get('search'));
         }
+
+        // Category filter
+        if ($request->filled('category')) {
+            $query->byCategory($request->get('category'));
+        }
+
+        // Sort functionality
+        $sort = $request->get('sort', 'latest');
+        $query->sortBy($sort);
 
         $posts = $query->paginate(12);
 
-        // Get categories for filter
+        // Add like and bookmark status for authenticated users
+        if (auth()->check()) {
+            $posts->getCollection()->transform(function ($post) {
+                $post->setAttribute('is_liked', $post->is_liked);
+                $post->setAttribute('is_bookmarked', $post->is_bookmarked);
+                $post->setAttribute('likes', $post->likes_count);
+                return $post;
+            });
+        }
+
+        // Get categories for filter dropdown
         $categories = Post::select('category')
             ->distinct()
-            ->pluck('category');
+            ->whereNotNull('category')
+            ->pluck('category')
+            ->sort()
+            ->values();
 
         // Get featured posts
-        $featuredPosts = Post::with('user')
+        $featuredPosts = Post::with(['user'])
             ->featured()
             ->published()
-            ->limit(3)
+            ->withStats()
+            ->orderByDesc('created_at')
+            ->limit(4)
             ->get();
+
+        // Add stats for featured posts
+        if (auth()->check()) {
+            $featuredPosts->transform(function ($post) {
+                $post->setAttribute('is_liked', $post->is_liked);
+                $post->setAttribute('is_bookmarked', $post->is_bookmarked);
+                $post->setAttribute('likes', $post->likes_count);
+                return $post;
+            });
+        }
 
         return Inertia::render('Community/Index', [
             'posts' => $posts,
             'categories' => $categories,
             'featuredPosts' => $featuredPosts,
-            'filters' => [
-                'category' => $request->category ?? 'all',
-                'search' => $request->search ?? '',
-            ],
+            'filters' => $request->only(['search', 'category', 'sort']),
         ]);
     }
 
     public function show(Post $post)
     {
-        $post->load(['user', 'comments.user', 'comments.replies.user']);
+        // Load relationships with proper nested loading
+        $post->load([
+            'user', 
+            'comments' => function ($query) {
+                $query->approved()->with(['user', 'replies.user'])->orderBy('created_at', 'asc');
+            }
+        ]);
         
         // Increment view count
         $post->incrementViews();
+
+        // Add like and bookmark status for authenticated users
+        if (auth()->check()) {
+            $post->setAttribute('is_liked', $post->is_liked);
+            $post->setAttribute('is_bookmarked', $post->is_bookmarked);
+            $post->setAttribute('likes', $post->likes_count);
+            
+            // Add like status for comments
+            $post->comments->each(function ($comment) {
+                $comment->setAttribute('is_liked', $comment->is_liked);
+                $comment->setAttribute('likes_count', $comment->likes_count);
+                
+                // Add like status for replies
+                if ($comment->replies) {
+                    $comment->replies->each(function ($reply) {
+                        $reply->setAttribute('is_liked', $reply->is_liked);
+                        $reply->setAttribute('likes_count', $reply->likes_count);
+                    });
+                }
+            });
+        }
 
         // Get related posts
         $relatedPosts = Post::with('user')
             ->where('category', $post->category)
             ->where('id', '!=', $post->id)
             ->published()
-            ->limit(3)
+            ->withStats()
+            ->limit(4)
             ->get();
 
         return Inertia::render('Community/Show', [
             'post' => $post,
             'relatedPosts' => $relatedPosts,
+            'auth' => [
+                'user' => auth()->user()
+            ]
         ]);
     }
 
@@ -153,36 +206,8 @@ class PostController extends Controller
     public function like(Request $request, Post $post)
     {
         $user = auth()->user();
-        
-        // Check if user already liked this post
-        $existingLike = DB::table('post_likes')
-            ->where('post_id', $post->id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if ($existingLike) {
-            // Unlike the post
-            DB::table('post_likes')
-                ->where('post_id', $post->id)
-                ->where('user_id', $user->id)
-                ->delete();
-            
-            $isLiked = false;
-        } else {
-            // Like the post
-            DB::table('post_likes')->insert([
-                'post_id' => $post->id,
-                'user_id' => $user->id,
-                'created_at' => now(),
-            ]);
-            
-            $isLiked = true;
-        }
-
-        // Get updated like count
-        $likesCount = DB::table('post_likes')
-            ->where('post_id', $post->id)
-            ->count();
+        $isLiked = $post->toggleLike($user);
+        $likesCount = $post->likes()->count();
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -191,37 +216,13 @@ class PostController extends Controller
             ]);
         }
 
-        return back();
+        return back()->with('success', $isLiked ? 'Post liked!' : 'Post unliked!');
     }
 
     public function bookmark(Request $request, Post $post)
     {
         $user = auth()->user();
-        
-        // Check if user already bookmarked this post
-        $existingBookmark = DB::table('post_bookmarks')
-            ->where('post_id', $post->id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if ($existingBookmark) {
-            // Remove bookmark
-            DB::table('post_bookmarks')
-                ->where('post_id', $post->id)
-                ->where('user_id', $user->id)
-                ->delete();
-            
-            $isBookmarked = false;
-        } else {
-            // Add bookmark
-            DB::table('post_bookmarks')->insert([
-                'post_id' => $post->id,
-                'user_id' => $user->id,
-                'created_at' => now(),
-            ]);
-            
-            $isBookmarked = true;
-        }
+        $isBookmarked = $post->toggleBookmark($user);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -229,6 +230,6 @@ class PostController extends Controller
             ]);
         }
 
-        return back();
+        return back()->with('success', $isBookmarked ? 'Post bookmarked!' : 'Bookmark removed!');
     }
 }

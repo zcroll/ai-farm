@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -65,5 +66,24 @@ class User extends Authenticatable
     public function aiChats(): HasMany
     {
         return $this->hasMany(AIChat::class);
+    }
+
+    // Like and bookmark relationships
+    public function likedPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'post_likes')
+                    ->withTimestamps();
+    }
+
+    public function likedComments(): BelongsToMany
+    {
+        return $this->belongsToMany(Comment::class, 'comment_likes')
+                    ->withTimestamps();
+    }
+
+    public function bookmarkedPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'post_bookmarks')
+                    ->withTimestamps();
     }
 }
