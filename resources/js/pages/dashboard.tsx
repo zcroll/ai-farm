@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Leaf, AlertTriangle, CheckCircle, BarChart3, Database } from 'lucide-react';
 import axios from 'axios';
 import DiseaseDashboard from '@/components/dashboard/disease-dashboard';
+import WeatherWidget from '@/components/weather-widget';
+import PlantHealthTracker from '@/components/plant-health-tracker';
 
 interface DashboardProps {
   auth: any;
@@ -98,14 +100,59 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
               <p className="text-gray-400">Monitor your plant health and get detailed insights</p>
             </div>
             
-            <div>
+            <div className="flex gap-3">
               <Link href="/scan">
-                <Button className="bg-green-600 hover:bg-green-700">
-                  <Leaf className="h-4 w-4 mr-2" />
+                <Button className="bg-green-600 hover:bg-green-700 text-lg px-6 py-3">
+                  <Leaf className="h-5 w-5 mr-2" />
                   New Scan
                 </Button>
               </Link>
+              <Link href="/community">
+                <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800">
+                  Community
+                </Button>
+              </Link>
             </div>
+          </div>
+
+          {/* Quick Navigation Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <Link href="/scan">
+              <Card className="bg-green-600 hover:bg-green-700 transition-colors cursor-pointer border-green-500">
+                <CardContent className="p-4 text-center">
+                  <Leaf className="h-8 w-8 mx-auto mb-2 text-white" />
+                  <h3 className="font-semibold text-white">New Scan</h3>
+                  <p className="text-xs text-green-100">Diagnose plants</p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/history">
+              <Card className="bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer border-gray-700">
+                <CardContent className="p-4 text-center">
+                  <BarChart3 className="h-8 w-8 mx-auto mb-2 text-blue-400" />
+                  <h3 className="font-semibold text-white">History</h3>
+                  <p className="text-xs text-gray-400">Past scans</p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/disease-library">
+              <Card className="bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer border-gray-700">
+                <CardContent className="p-4 text-center">
+                  <Database className="h-8 w-8 mx-auto mb-2 text-purple-400" />
+                  <h3 className="font-semibold text-white">Disease Library</h3>
+                  <p className="text-xs text-gray-400">Learn about diseases</p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/community">
+              <Card className="bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer border-gray-700">
+                <CardContent className="p-4 text-center">
+                  <CheckCircle className="h-8 w-8 mx-auto mb-2 text-yellow-400" />
+                  <h3 className="font-semibold text-white">Community</h3>
+                  <p className="text-xs text-gray-400">Get help & share</p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
           
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -122,7 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
             </TabsList>
             
             <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <Card className="bg-gray-900 border-gray-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg text-white">Total Scans</CardTitle>
@@ -165,6 +212,28 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Weather Widget */}
+              <div className="mb-6">
+                <WeatherWidget />
+              </div>
+
+              {/* Plant Health Tracker */}
+              <div className="mb-6">
+                <PlantHealthTracker 
+                  recentScans={history.data.map(scan => ({
+                    id: scan.id,
+                    date: scan.created_at,
+                    predicted_disease: scan.predicted_disease,
+                    confidence: scan.confidence,
+                    plant_type: scan.predicted_disease.split('___')[0]?.replace(/_/g, ' ') || 'Unknown',
+                    is_healthy: scan.predicted_disease.includes('healthy')
+                  }))}
+                  plantTypes={Array.from(new Set(history.data.map(scan => 
+                    scan.predicted_disease.split('___')[0]?.replace(/_/g, ' ') || 'Unknown'
+                  )))}
+                />
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="bg-gray-900 border-gray-800">
@@ -178,9 +247,9 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                           <Link 
                             key={scan.id} 
                             href={`/scan/${scan.id}`}
-                            className="flex items-center gap-4 p-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+                            className="flex items-center gap-4 p-4 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors border border-gray-700 hover:border-gray-600"
                           >
-                            <div className="h-12 w-12 rounded-md overflow-hidden">
+                            <div className="h-16 w-16 rounded-lg overflow-hidden border border-gray-600">
                               <img 
                                 src={`/storage/${scan.image_path}`} 
                                 alt="Plant scan" 
@@ -188,23 +257,43 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-white truncate">
+                              <p className="text-sm font-medium text-white truncate mb-1">
                                 {formatDiseaseName(scan.predicted_disease)}
                               </p>
-                              <p className="text-xs text-gray-400">
-                                {new Date(scan.created_at).toLocaleString()}
+                              <p className="text-xs text-gray-400 mb-1">
+                                {new Date(scan.created_at).toLocaleDateString()}
                               </p>
+                              {scan.disease?.description && (
+                                <p className="text-xs text-gray-500 truncate">
+                                  {scan.disease.description.substring(0, 60)}...
+                                </p>
+                              )}
                             </div>
-                            <Badge 
-                              variant={scan.predicted_disease.includes('healthy') ? "success" : "destructive"}
-                              className="ml-auto"
-                            >
-                              {Math.round(scan.confidence * 100)}%
-                            </Badge>
+                            <div className="text-right">
+                              <Badge 
+                                variant={scan.predicted_disease.includes('healthy') ? "success" : "destructive"}
+                                className="mb-2"
+                              >
+                                {Math.round(scan.confidence * 100)}%
+                              </Badge>
+                              <div className="text-xs text-gray-400">
+                                {scan.predicted_disease.includes('healthy') ? 'Healthy' : 'Needs attention'}
+                              </div>
+                            </div>
                           </Link>
                         ))
                       ) : (
-                        <p className="text-gray-400 text-center py-4">No scan history available</p>
+                        <div className="text-center py-8">
+                          <Leaf className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-gray-400 text-lg mb-2">No scans yet</p>
+                          <p className="text-gray-500 text-sm mb-4">Start scanning your plants to monitor their health</p>
+                          <Link href="/scan">
+                            <Button className="bg-green-600 hover:bg-green-700">
+                              <Leaf className="h-4 w-4 mr-2" />
+                              Start Your First Scan
+                            </Button>
+                          </Link>
+                        </div>
                       )}
                       
                       {history.data.length > 5 && (

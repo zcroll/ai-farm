@@ -36,6 +36,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Plant disease detection specific routes
+    Route::get('/scan', [DashboardController::class, 'scan'])->name('scan');
     Route::get('/history', [DashboardController::class, 'history'])->name('history');
     Route::get('/scan/{id}', [DashboardController::class, 'showScan'])->name('scan.show');
     
@@ -61,6 +62,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::post('/comments/{comment}/like', [CommentController::class, 'like'])->name('comments.like');
     
+    // Post interaction routes
+    Route::post('/community/{post}/like', [PostController::class, 'like'])->name('posts.like');
+    Route::post('/community/{post}/bookmark', [PostController::class, 'bookmark'])->name('posts.bookmark');
+    
+    // API routes for AJAX requests
+    Route::prefix('api')->group(function () {
+        Route::post('/posts/{post}/like', [\App\Http\Controllers\Api\CommunityController::class, 'likePost']);
+        Route::post('/posts/{post}/bookmark', [\App\Http\Controllers\Api\CommunityController::class, 'bookmarkPost']);
+        Route::post('/comments/{comment}/like', [\App\Http\Controllers\Api\CommunityController::class, 'likeComment']);
+        Route::get('/posts', [\App\Http\Controllers\Api\CommunityController::class, 'getPosts']);
+        Route::get('/posts/{post}/comments', [\App\Http\Controllers\Api\CommunityController::class, 'getComments']);
+        Route::get('/posts/search', [\App\Http\Controllers\Api\CommunityController::class, 'searchPosts']);
+        Route::get('/user/stats', [\App\Http\Controllers\Api\CommunityController::class, 'getUserStats']);
+    });
+    
     // AI Chat routes
     Route::resource('ai-chat', AIChatController::class)->names([
         'index' => 'ai-chat.index',
@@ -73,6 +89,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Prediction routes
     Route::post('/predictions', [PredictionController::class, 'store'])->name('predictions.store');
+});
+
+// API routes for AJAX requests
+Route::middleware(['auth'])->group(function () {
+    Route::post('/api/test-model', [PredictionController::class, 'testModel'])->name('api.test-model');
 });
 
 // Settings routes

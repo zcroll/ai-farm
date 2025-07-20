@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/react';
-import { Leaf, AlertTriangle, CheckCircle, Thermometer, Clock, Map, Droplet, Wrench } from 'lucide-react';
+import { Leaf, AlertTriangle, CheckCircle, Thermometer, Clock, Map, Droplet, Wrench, ArrowLeft } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface Disease {
@@ -102,16 +102,35 @@ export default function ScanDetail({ scan, relatedDiseases = [] }: ScanDetailPro
             <Head title={`Scan Details - ${diseaseName}`} />
             <div className="py-6 px-4 sm:px-6 lg:px-8 bg-black min-h-screen">
                 <div className="max-w-7xl mx-auto">
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h1 className="text-2xl font-bold text-white">Scan Details</h1>
-                            <p className="text-gray-400">Scan completed on {formattedDate}</p>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div className="flex items-center gap-4">
+                            <Link href="/history">
+                                <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800">
+                                    <ArrowLeft className="h-4 w-4 mr-2" />
+                                    Back to History
+                                </Button>
+                            </Link>
+                            <div>
+                                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                                    <Leaf className="h-6 w-6 text-green-500" />
+                                    Scan #{scan.id}
+                                </h1>
+                                <p className="text-gray-400">Scanned on {formattedDate}</p>
+                            </div>
                         </div>
-                        <Link href="/history">
-                            <Button variant="outline" className="bg-gray-900 border-gray-700 text-white hover:bg-gray-800">
-                                Back to History
-                            </Button>
-                        </Link>
+                        <div className="flex gap-2">
+                            <Link href="/scan">
+                                <Button className="bg-green-600 hover:bg-green-700">
+                                    <Leaf className="h-4 w-4 mr-2" />
+                                    New Scan
+                                </Button>
+                            </Link>
+                            <Link href="/community">
+                                <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800">
+                                    Get Help
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

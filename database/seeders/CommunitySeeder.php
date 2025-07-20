@@ -9,171 +9,197 @@ use Illuminate\Database\Seeder;
 
 class CommunitySeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
+        // Create sample users if they don't exist
         $users = User::all();
-        
-        if ($users->isEmpty()) {
-            $this->command->info('No users found. Please run DatabaseSeeder first to create users.');
-            return;
+        if ($users->count() < 5) {
+            $users = User::factory(5)->create();
         }
 
-        $posts = [
+        // Sample categories
+        $categories = [
+            'Disease Diagnosis',
+            'Plant Care',
+            'Success Stories',
+            'Equipment',
+            'General'
+        ];
+
+        // Sample posts data
+        $postsData = [
             [
-                'title' => 'My Experience with Tomato Blight - A Success Story',
-                'content' => "I wanted to share my experience dealing with early blight on my tomato plants this season. Initially, I noticed small brown spots on the lower leaves, and within a week, the disease was spreading rapidly.\n\nHere's what I did to successfully manage it:\n\n1. **Immediate Action**: Removed all infected leaves and stems\n2. **Improved Air Circulation**: Pruned the plants to allow better airflow\n3. **Mulching**: Added straw mulch to prevent soil splash\n4. **Fungicide Application**: Used copper-based fungicide every 7-10 days\n5. **Watering Technique**: Changed to drip irrigation to keep leaves dry\n\nAfter 3 weeks of consistent treatment, the new growth was healthy and the disease was under control. The key was early detection and consistent treatment!\n\nHas anyone else had success with similar methods?",
-                'category' => 'experience',
-                'tags' => ['tomato', 'early-blight', 'treatment', 'success'],
-                'user_id' => $users->random()->id,
-                'views' => rand(50, 200),
-                'likes' => rand(10, 50),
+                'title' => 'Tomato Plant Leaves Turning Yellow - Need Help!',
+                'content' => "I've been growing tomatoes for the past few months, but recently I noticed the leaves are turning yellow from the bottom up. I water them regularly and they get plenty of sunlight. Has anyone experienced this before? What could be causing it?\n\nI've attached some photos. The plants are about 2 months old and were doing great until last week.",
+                'category' => 'Disease Diagnosis',
+                'tags' => ['tomato', 'yellow-leaves', 'help-needed'],
                 'is_featured' => true,
+            ],
+            [
+                'title' => 'Successful Harvest: My Organic Pepper Garden',
+                'content' => "After months of careful nurturing, I'm thrilled to share my successful pepper harvest! This season I grew bell peppers, jalapeños, and habaneros using completely organic methods.\n\nKey things that helped:\n- Companion planting with basil\n- Regular soil testing\n- Natural pest control methods\n- Consistent watering schedule\n\nThe yield was amazing - 50% more than last year!",
+                'category' => 'Success Stories',
+                'tags' => ['peppers', 'organic', 'harvest', 'success'],
+                'is_featured' => true,
+            ],
+            [
+                'title' => 'Best Soil pH Testing Kit for Small Farms?',
+                'content' => "I'm looking to invest in a good soil pH testing kit for my small farm. Currently using basic strips but want something more accurate for better crop planning.\n\nWhat do you all recommend? Budget is around $200-300. Need something portable and easy to use in the field.",
+                'category' => 'Equipment',
+                'tags' => ['soil-testing', 'equipment', 'recommendations'],
+                'is_pinned' => true,
+            ],
+            [
+                'title' => 'White Spots on Cucumber Leaves',
+                'content' => "Found white powdery spots on my cucumber leaves this morning. They seem to be spreading quickly. Is this powdery mildew? How do I treat it naturally without chemicals?",
+                'category' => 'Disease Diagnosis',
+                'tags' => ['cucumber', 'white-spots', 'powdery-mildew'],
+            ],
+            [
+                'title' => 'Companion Planting Guide for Beginners',
+                'content' => "Starting my first vegetable garden and heard about companion planting. Can someone share a simple guide or chart showing which plants grow well together?\n\nI'm planning to grow:\n- Tomatoes\n- Carrots\n- Lettuce\n- Beans\n- Herbs",
+                'category' => 'Plant Care',
+                'tags' => ['companion-planting', 'beginner', 'guide'],
+            ],
+            [
+                'title' => 'Aphid Infestation - Natural Solutions That Work',
+                'content' => "Dealing with a serious aphid problem on my rose bushes. Before resorting to chemicals, wanted to try natural methods first. What has worked for you?\n\nI've heard about:\n- Ladybugs\n- Neem oil\n- Soap spray\n- Companion plants\n\nAny success stories?",
+                'category' => 'Plant Care',
+                'tags' => ['aphids', 'natural-remedies', 'roses'],
+            ],
+            [
+                'title' => 'Setting Up Drip Irrigation System',
+                'content' => "Planning to install a drip irrigation system for my vegetable garden. Any recommendations for DIY-friendly systems? Garden is about 500 sq ft.",
+                'category' => 'Equipment',
+                'tags' => ['irrigation', 'DIY', 'water-management'],
+            ],
+            [
+                'title' => 'From Seed to Harvest: My Carrot Journey',
+                'content' => "Documenting my carrot growing experience from seed to harvest. Week 12 update: Finally harvested! Some lessons learned along the way that might help other beginners.",
+                'category' => 'Success Stories',
+                'tags' => ['carrots', 'journey', 'beginner-tips'],
+            ]
+        ];
+
+        // Create posts
+        foreach ($postsData as $index => $postData) {
+            $post = Post::create([
+                'user_id' => $users->random()->id,
+                'title' => $postData['title'],
+                'content' => $postData['content'],
+                'category' => $postData['category'],
+                'tags' => $postData['tags'],
+                'views' => rand(10, 500),
+                'likes' => rand(0, 50),
+                'is_featured' => $postData['is_featured'] ?? false,
+                'is_pinned' => $postData['is_pinned'] ?? false,
                 'published_at' => now()->subDays(rand(1, 30)),
-            ],
-            [
-                'title' => 'Question: Best Organic Methods for Apple Scab Prevention?',
-                'content' => "I'm planning to plant apple trees in my backyard this spring, and I'm concerned about apple scab since it's common in my area (Northeast US).\n\nI'm looking for organic prevention methods that I can implement from the start. I've read about:\n\n- Planting resistant varieties\n- Proper spacing and pruning\n- Removing fallen leaves\n- Neem oil applications\n\nDoes anyone have experience with organic apple scab management? What varieties would you recommend for resistance? Also, how effective are neem oil and other organic treatments?\n\nI'd prefer to avoid chemical fungicides if possible. Thanks for any advice!",
-                'category' => 'question',
-                'tags' => ['apple', 'apple-scab', 'organic', 'prevention'],
-                'user_id' => $users->random()->id,
-                'views' => rand(30, 150),
-                'likes' => rand(5, 25),
-                'published_at' => now()->subDays(rand(1, 20)),
-            ],
-            [
-                'title' => 'Pro Tip: Using Baking Soda for Powdery Mildew',
-                'content' => "I discovered an effective homemade remedy for powdery mildew that I wanted to share with the community!\n\n**Recipe:**\n- 1 tablespoon baking soda\n- 1 tablespoon vegetable oil\n- 1 teaspoon liquid soap\n- 1 gallon water\n\nMix thoroughly and spray on affected plants every 7-10 days. The baking soda creates an alkaline environment that inhibits fungal growth.\n\n**Important Notes:**\n- Test on a small area first\n- Apply in the morning to allow leaves to dry\n- Don't apply in direct sunlight\n- Works best as prevention or early treatment\n\nI've used this on my squash, cucumbers, and roses with great success. Much cheaper than commercial fungicides and completely safe for organic gardening!\n\nHas anyone else tried this method?",
-                'category' => 'tip',
-                'tags' => ['powdery-mildew', 'baking-soda', 'organic', 'homemade'],
-                'user_id' => $users->random()->id,
-                'views' => rand(100, 300),
-                'likes' => rand(20, 80),
-                'is_featured' => true,
-                'published_at' => now()->subDays(rand(1, 15)),
-            ],
-            [
-                'title' => 'Corn Rust Management - What Worked for Me',
-                'content' => "This season I faced a serious outbreak of common rust on my sweet corn. The disease appeared in mid-July and spread quickly through my 1/4 acre plot.\n\n**Initial Symptoms:**\n- Small, circular, brick-red pustules on leaves\n- Pustules breaking open and releasing spores\n- Rapid spread to upper leaves and husks\n\n**My Response Strategy:**\n1. **Immediate Fungicide Application**: Applied azoxystrobin at first sign\n2. **Crop Rotation Planning**: Mapped out 3-year rotation for next season\n3. **Resistant Varieties**: Researched and ordered rust-resistant hybrids\n4. **Field Sanitation**: Removed and destroyed all infected debris\n\n**Results:**\n- Yield loss was limited to about 15% (much better than expected)\n- Quality of remaining ears was good\n- Learned valuable lessons for prevention\n\n**Key Takeaway**: Early detection and quick action are crucial. I'm now monitoring my corn weekly starting in early July.\n\nAnyone else dealing with corn rust this season?",
-                'category' => 'experience',
-                'tags' => ['corn', 'rust', 'management', 'fungicide'],
-                'user_id' => $users->random()->id,
-                'views' => rand(40, 180),
-                'likes' => rand(8, 35),
-                'published_at' => now()->subDays(rand(1, 25)),
-            ],
-            [
-                'title' => 'Grape Black Rot - Complete Treatment Guide',
-                'content' => "After losing most of my grape harvest to black rot last year, I've compiled a comprehensive treatment guide based on my research and this year's successful management.\n\n**Understanding the Disease:**\nBlack rot is caused by Guignardia bidwellii and affects leaves, fruit, and canes. The fungus overwinters in infected plant material.\n\n**Prevention Methods:**\n1. **Site Selection**: Choose sunny, well-drained locations\n2. **Variety Selection**: Plant resistant varieties when possible\n3. **Pruning**: Remove dead wood and improve air circulation\n4. **Sanitation**: Remove and destroy infected material\n\n**Treatment Protocol:**\n- **Dormant Spray**: Apply lime sulfur before bud break\n- **Protective Sprays**: Begin fungicide program at 3-4 inch shoot growth\n- **Timing**: Continue applications through 4 weeks after bloom\n- **Products**: Captan, mancozeb, or copper-based fungicides\n\n**Monitoring:**\n- Check for symptoms weekly during growing season\n- Look for circular lesions with black fruiting bodies\n- Monitor weather conditions (warm, wet weather favors disease)\n\nThis year I had 95% clean fruit! The key was consistent monitoring and timely applications.",
-                'category' => 'tip',
-                'tags' => ['grape', 'black-rot', 'treatment', 'guide'],
-                'user_id' => $users->random()->id,
-                'views' => rand(80, 250),
-                'likes' => rand(15, 60),
-                'is_featured' => true,
-                'published_at' => now()->subDays(rand(1, 10)),
-            ],
-            [
-                'title' => 'Question: Blueberry Disease Identification Help',
-                'content' => "I'm having trouble identifying what's affecting my blueberry bushes. The symptoms include:\n\n- Reddish-brown spots on leaves\n- Some leaves turning yellow and falling off\n- Small, dark spots on stems\n- Reduced fruit production\n\nI'm in Zone 6, and the bushes are about 5 years old. I've been growing them in acidic soil (pH 4.8) with regular mulching.\n\nCould this be mummy berry, anthracnose, or something else? I've attached some photos but they're not very clear.\n\nWhat diagnostic steps should I take? Should I send samples to my local extension office?\n\nAny help would be greatly appreciated!",
-                'category' => 'question',
-                'tags' => ['blueberry', 'disease-identification', 'diagnosis'],
-                'user_id' => $users->random()->id,
-                'views' => rand(25, 120),
-                'likes' => rand(3, 20),
-                'published_at' => now()->subDays(rand(1, 18)),
-            ],
-            [
-                'title' => 'Cherry Tree Care - Preventing Bacterial Canker',
-                'content' => "I've been growing cherry trees for over 10 years and wanted to share my experience with preventing bacterial canker, which is a major threat to cherry production.\n\n**Prevention is Key:**\n1. **Site Selection**: Avoid frost pockets and windy locations\n2. **Variety Choice**: Plant varieties resistant to bacterial canker\n3. **Pruning Timing**: Prune only during dry weather in late summer\n4. **Tool Sanitation**: Disinfect tools between cuts and trees\n5. **Fertilization**: Avoid excessive nitrogen that promotes succulent growth\n\n**Early Detection:**\n- Look for sunken, dark lesions on branches\n- Check for gumming around wounds\n- Monitor for leaf spots and shot holes\n\n**Treatment Options:**\n- Remove infected branches 12 inches below visible symptoms\n- Apply copper sprays during dormancy\n- Consider trunk painting for young trees\n\n**My Success Story:**\nAfter implementing these practices, I've had zero canker issues for 3 consecutive years. The investment in prevention has paid off!\n\nWhat's your experience with cherry tree diseases?",
-                'category' => 'experience',
-                'tags' => ['cherry', 'bacterial-canker', 'prevention', 'pruning'],
-                'user_id' => $users->random()->id,
-                'views' => rand(60, 200),
-                'likes' => rand(12, 45),
-                'published_at' => now()->subDays(rand(1, 22)),
-            ],
-            [
-                'title' => 'Organic Soil Amendments for Disease Prevention',
-                'content' => "I've been experimenting with various organic soil amendments to boost plant health and disease resistance. Here's what I've found most effective:\n\n**Compost Tea Applications:**\n- Brew aerated compost tea weekly\n- Apply as foliar spray and soil drench\n- Increases beneficial microbes\n- Improves nutrient availability\n\n**Mycorrhizal Fungi:**\n- Inoculate soil with mycorrhizal fungi\n- Improves root health and nutrient uptake\n- Enhances disease resistance\n- Works best when applied at planting\n\n**Seaweed Extracts:**\n- Contains natural growth hormones\n- Improves stress tolerance\n- Enhances disease resistance\n- Apply monthly during growing season\n\n**Results After 2 Years:**\n- 40% reduction in fungal diseases\n- Improved plant vigor and yield\n- Better drought tolerance\n- Reduced need for fungicides\n\n**Application Schedule:**\n- Spring: Mycorrhizal inoculation\n- Growing Season: Weekly compost tea\n- Monthly: Seaweed extract foliar spray\n\nHas anyone else experimented with these methods? I'd love to compare results!",
-                'category' => 'tip',
-                'tags' => ['organic', 'soil-amendments', 'disease-prevention', 'compost-tea'],
-                'user_id' => $users->random()->id,
-                'views' => rand(70, 220),
-                'likes' => rand(18, 55),
-                'published_at' => now()->subDays(rand(1, 12)),
-            ],
-        ];
-
-        foreach ($posts as $postData) {
-            $post = Post::create($postData);
-            
-            // Add comments to each post
-            $this->addCommentsToPost($post, $users);
-        }
-
-        $this->command->info('Community content seeded successfully!');
-    }
-
-    private function addCommentsToPost(Post $post, $users): void
-    {
-        $commentTemplates = [
-            "Great post! I've had similar experiences with {disease}. Your approach seems very thorough.",
-            "Thanks for sharing this! I'm definitely going to try {method} on my plants.",
-            "I've been dealing with {disease} too. Have you tried {alternative_method}?",
-            "This is really helpful information. I especially like the {specific_point} you mentioned.",
-            "I'm new to gardening and this post is exactly what I needed. Thanks!",
-            "Interesting approach! I've always used {different_method} but your method sounds promising.",
-            "How long did it take you to see results with this treatment?",
-            "Do you have any recommendations for {related_topic}?",
-            "I've been struggling with this same issue. Your post gives me hope!",
-            "Excellent detailed guide. I'm bookmarking this for future reference.",
-        ];
-
-        $diseases = ['tomato blight', 'apple scab', 'powdery mildew', 'corn rust', 'grape black rot'];
-        $methods = ['organic treatment', 'fungicide application', 'pruning techniques', 'soil amendments'];
-        $topics = ['prevention methods', 'resistant varieties', 'organic alternatives', 'timing of applications'];
-
-        $numComments = rand(2, 8);
-        
-        for ($i = 0; $i < $numComments; $i++) {
-            $template = $commentTemplates[array_rand($commentTemplates)];
-            $disease = $diseases[array_rand($diseases)];
-            $method = $methods[array_rand($methods)];
-            $topic = $topics[array_rand($topics)];
-            
-            $content = str_replace(
-                ['{disease}', '{method}', '{alternative_method}', '{specific_point}', '{different_method}', '{related_topic}'],
-                [$disease, $method, $methods[array_rand($methods)], 'detailed approach', $methods[array_rand($methods)], $topic],
-                $template
-            );
-
-            $comment = Comment::create([
-                'user_id' => $users->random()->id,
-                'post_id' => $post->id,
-                'content' => $content,
-                'likes' => rand(0, 10),
-                'created_at' => $post->created_at->addMinutes(rand(5, 1440)), // Within 24 hours of post
             ]);
 
-            // Add some replies to comments
-            if (rand(1, 3) === 1) {
-                $replyContent = "Thanks for the comment! " . [
-                    "I'm glad you found it helpful.",
-                    "Let me know how it works for you.",
-                    "I'd love to hear about your results.",
-                    "Feel free to ask if you need clarification.",
-                    "I'm always learning from other gardeners too."
-                ][array_rand([0, 1, 2, 3, 4])];
+            // Add some likes
+            $likers = $users->random(rand(1, 5));
+            foreach ($likers as $liker) {
+                $post->likes()->attach($liker->id);
+            }
 
-                Comment::create([
-                    'user_id' => $post->user_id, // Post author replies
+            // Add comments
+            $commentCount = rand(1, 8);
+            for ($i = 0; $i < $commentCount; $i++) {
+                $comment = Comment::create([
+                    'user_id' => $users->random()->id,
                     'post_id' => $post->id,
-                    'parent_id' => $comment->id,
-                    'content' => $replyContent,
-                    'likes' => rand(0, 5),
-                    'created_at' => $comment->created_at->addMinutes(rand(10, 120)),
+                    'content' => $this->getRandomComment($postData['category']),
+                    'is_approved' => true,
+                    'created_at' => now()->subDays(rand(0, 15)),
                 ]);
+
+                // Add some likes to comments
+                $commentLikers = $users->random(rand(0, 3));
+                foreach ($commentLikers as $liker) {
+                    $comment->likes()->attach($liker->id);
+                }
+
+                // Add replies (30% chance)
+                if (rand(1, 10) <= 3) {
+                    $reply = Comment::create([
+                        'user_id' => $users->random()->id,
+                        'post_id' => $post->id,
+                        'parent_id' => $comment->id,
+                        'content' => $this->getRandomReply(),
+                        'is_approved' => true,
+                        'created_at' => now()->subDays(rand(0, 10)),
+                    ]);
+
+                    // Add likes to replies
+                    $replyLikers = $users->random(rand(0, 2));
+                    foreach ($replyLikers as $liker) {
+                        $reply->likes()->attach($liker->id);
+                    }
+                }
             }
         }
+    }
+
+    private function getRandomComment($category): string
+    {
+        $comments = [
+            'Disease Diagnosis' => [
+                "I had the same issue last season. Try checking the soil drainage - overwatering can cause similar symptoms.",
+                "This looks like a nutrient deficiency to me. Have you tested your soil lately?",
+                "I recommend removing the affected leaves and improving air circulation around the plants.",
+                "Similar thing happened to my plants. Turns out it was early blight. Check for brown spots with rings.",
+                "Make sure you're not watering the leaves directly. Water at the base of the plant instead.",
+            ],
+            'Plant Care' => [
+                "Great question! I've found that companion planting really does make a difference.",
+                "For natural pest control, I swear by neem oil spray applied in the evening.",
+                "Consistency is key with watering. I use a moisture meter to check soil before watering.",
+                "Mulching has been a game-changer for my garden. Helps retain moisture and suppress weeds.",
+                "Don't forget about beneficial insects! They're your best allies in the garden.",
+            ],
+            'Success Stories' => [
+                "Congratulations! Your harvest looks amazing. Thanks for sharing the tips!",
+                "Inspiring story! I'm definitely going to try some of your techniques.",
+                "Love seeing success stories like this. Gives me motivation for my own garden.",
+                "Your organic approach is fantastic. We need more growers like you!",
+                "Amazing results! How long did it take from seed to harvest?",
+            ],
+            'Equipment' => [
+                "I've been using the XYZ brand tester for 2 years now - very reliable and accurate.",
+                "For that budget, you might want to consider the ABC model. Great features for the price.",
+                "Digital meters are definitely worth the investment over strips for consistent results.",
+                "Check out local agricultural extension offices - they sometimes loan equipment.",
+                "Make sure whatever you get is waterproof if you'll be using it in muddy conditions.",
+            ],
+            'General' => [
+                "Thanks for sharing! Always learning something new in this community.",
+                "This is exactly the kind of information I was looking for.",
+                "Great post! Have you considered documenting your process with photos?",
+                "I'm new to gardening and posts like this are so helpful.",
+                "Keep us updated on your progress!",
+            ]
+        ];
+
+        $categoryComments = $comments[$category] ?? $comments['General'];
+        return $categoryComments[array_rand($categoryComments)];
+    }
+
+    private function getRandomReply(): string
+    {
+        $replies = [
+            "Thanks for the advice! I'll definitely try that.",
+            "That's a great point. I hadn't considered that angle.",
+            "Really appreciate the detailed response!",
+            "I tried something similar and it worked well for me too.",
+            "Good to know! I'll keep that in mind for next season.",
+            "Thanks for sharing your experience!",
+            "That makes a lot of sense. I'll give it a shot.",
+            "Appreciate the help from this community!",
+        ];
+
+        return $replies[array_rand($replies)];
     }
 }

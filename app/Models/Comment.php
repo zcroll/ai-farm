@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Comment extends Model
 {
@@ -24,6 +25,8 @@ class Comment extends Model
         'is_approved' => 'boolean',
     ];
 
+    protected $appends = ['likes_count', 'is_liked'];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -41,9 +44,31 @@ class Comment extends Model
 
     public function replies(): HasMany
     {
-        return $this->hasMany(Comment::class, 'parent_id');
+        return $this->hasMany(Comment::class, 'parent_id')->with('user');
     }
 
+    public function likes(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'comment_likes')
+                    ->withTimestamps();
+    }
+
+    // Accessors
+    public function getLikesCountAttribute(): int
+    {
+        return $this->likes()->count();
+    }
+
+    public function getIsLikedAttribute(): bool
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+        
+        return $this->likes()->where('user_id', auth()->id())->exists();
+    }
+
+    // Scopes
     public function scopeApproved($query)
     {
         return $query->where('is_approved', true);
@@ -54,8 +79,32 @@ class Comment extends Model
         return $query->whereNull('parent_id');
     }
 
-    public function incrementLikes()
+    public function scopeWithStats($query)
     {
-        $this->increment('likes');
+        return $query->withCount('likes');
+    }
+
+    // Helper methods
+    public function toggleLike(User $user)
+    {
+        if ($this->likes()->where('user_id', $user->id)->exists()) {
+            $this->likes()->detach($user->id);
+            return false; // unliked
+        } else {
+            $this->likes()->attach($user->id);
+            return true; // liked
+        }
+    }
+
+    // Boot method to auto-approve comments (you can change this logic)
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::creating(function ($comment) {
+            if (is_null($comment->is_approved)) {
+                $comment->is_approved = true; // Auto-approve for now
+            }
+        });
     }
 }

@@ -48,6 +48,11 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function scan(Request $request)
+    {
+        return Inertia::render('Scan');
+    }
+
     public function history(Request $request)
     {
         $user = $request->user();
