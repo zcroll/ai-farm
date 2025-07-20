@@ -430,7 +430,7 @@ export default function ScanDetail({ scan, relatedDiseases = [] }: ScanDetailPro
                                                     </Badge>
                                                 )}
                                                 
-                                                <Link href={`/disease-library?disease=${disease.id}`}>
+                                                <Link href={`/diseases/${disease.id}`}>
                                                     <Button variant="link" className="text-blue-400 hover:text-blue-300 p-0 h-auto">
                                                         View Details
                                                     </Button>

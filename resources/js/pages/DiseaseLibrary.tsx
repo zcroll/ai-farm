@@ -44,6 +44,7 @@ const DiseaseLibrary: React.FC<DiseaseLibraryProps> = ({ diseases, plantTypes })
       
       <div className="py-6 px-4 sm:px-6 lg:px-8 bg-black min-h-screen">
         <div className="max-w-7xl mx-auto">
+          <h1 className="text-2xl font-bold text-white mb-4">Disease Library</h1>
           <DiseaseDashboard diseases={diseases} />
         </div>
       </div>

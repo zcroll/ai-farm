@@ -99,7 +99,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
             </div>
             
             <div>
-              <Link href="/predictions/create">
+              <Link href="/scan">
                 <Button className="bg-green-600 hover:bg-green-700">
                   <Leaf className="h-4 w-4 mr-2" />
                   New Scan

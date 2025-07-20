@@ -186,6 +186,22 @@ export const AnimatedResultCard: React.FC<AnimatedResultCardProps> = ({
             </Button>
           </motion.div>
         )}
+        {disease.id && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 0.5 }}
+          >
+            <Button 
+              variant="default"
+              onClick={() => window.location.href = `/diseases/${disease.id}`}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            >
+              View Details
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        )}
       </CardFooter>
     </MotionCard>
   );
