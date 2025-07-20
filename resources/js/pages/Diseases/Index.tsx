@@ -37,13 +37,18 @@ interface DiagnosedDiseasesProps {
   };
 }
 
-const DiagnosedDiseases: React.FC<DiagnosedDiseasesProps> = ({ diagnosedDiseases, stats }) => {
+const DiagnosedDiseases: React.FC<DiagnosedDiseasesProps> = ({ diagnosedDiseases = [], stats = {
+  total_detections: 0,
+  unique_diseases: 0,
+  healthy_detections: 0,
+  diseased_detections: 0
+} }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [severityFilter, setSeverityFilter] = useState('all');
   const [plantTypeFilter, setPlantTypeFilter] = useState('all');
 
   // Filter diseases based on search and filters
-  const filteredDiseases = diagnosedDiseases.filter(disease => {
+  const filteredDiseases = (diagnosedDiseases || []).filter(disease => {
     const matchesSearch = disease.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          disease.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSeverity = severityFilter === 'all' || disease.severity_level === severityFilter;
@@ -177,7 +182,7 @@ const DiagnosedDiseases: React.FC<DiagnosedDiseasesProps> = ({ diagnosedDiseases
               </SelectTrigger>
               <SelectContent className="bg-gray-900 border-gray-700">
                 <SelectItem value="all">All Plants</SelectItem>
-                {Array.from(new Set(diagnosedDiseases.map(d => d.plant_type))).map(type => (
+                {Array.from(new Set((diagnosedDiseases || []).map(d => d.plant_type))).map(type => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
                 ))}
               </SelectContent>
