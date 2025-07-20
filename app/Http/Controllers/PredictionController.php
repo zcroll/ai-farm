@@ -11,9 +11,15 @@ use Illuminate\Http\Response;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class PredictionController extends Controller
 {
+    public function create()
+    {
+        return Inertia::render('Predictions/Create');
+    }
+
     public function store(Request $request)
     {
         try {

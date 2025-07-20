@@ -71,6 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/ai-chat/{chat}/message', [AIChatController::class, 'sendMessage'])->name('ai-chat.message');
     
     // Prediction routes
+    Route::get('/predictions/create', [PredictionController::class, 'create'])->name('predictions.create');
     Route::post('/predictions', [PredictionController::class, 'store'])->name('predictions.store');
 });
 
