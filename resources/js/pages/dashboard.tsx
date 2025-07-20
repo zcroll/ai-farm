@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Leaf, AlertTriangle, CheckCircle, BarChart3, Database } from 'lucide-react';
 import axios from 'axios';
 import DiseaseDashboard from '@/components/dashboard/disease-dashboard';
+import WeatherWidget from '@/components/weather-widget';
+import PlantHealthTracker from '@/components/plant-health-tracker';
 
 interface DashboardProps {
   auth: any;
@@ -167,7 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
             </TabsList>
             
             <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <Card className="bg-gray-900 border-gray-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg text-white">Total Scans</CardTitle>
@@ -209,6 +211,28 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                     </p>
                   </CardContent>
                 </Card>
+              </div>
+
+              {/* Weather Widget */}
+              <div className="mb-6">
+                <WeatherWidget />
+              </div>
+
+              {/* Plant Health Tracker */}
+              <div className="mb-6">
+                <PlantHealthTracker 
+                  recentScans={history.data.map(scan => ({
+                    id: scan.id,
+                    date: scan.created_at,
+                    predicted_disease: scan.predicted_disease,
+                    confidence: scan.confidence,
+                    plant_type: scan.predicted_disease.split('___')[0]?.replace(/_/g, ' ') || 'Unknown',
+                    is_healthy: scan.predicted_disease.includes('healthy')
+                  }))}
+                  plantTypes={Array.from(new Set(history.data.map(scan => 
+                    scan.predicted_disease.split('___')[0]?.replace(/_/g, ' ') || 'Unknown'
+                  )))}
+                />
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

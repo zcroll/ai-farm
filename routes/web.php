@@ -62,6 +62,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::post('/comments/{comment}/like', [CommentController::class, 'like'])->name('comments.like');
     
+    // Post interaction routes
+    Route::post('/community/{post}/like', [PostController::class, 'like'])->name('posts.like');
+    Route::post('/community/{post}/bookmark', [PostController::class, 'bookmark'])->name('posts.bookmark');
+    
     // AI Chat routes
     Route::resource('ai-chat', AIChatController::class)->names([
         'index' => 'ai-chat.index',

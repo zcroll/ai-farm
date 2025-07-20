@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PostController extends Controller
@@ -147,5 +148,87 @@ class PostController extends Controller
 
         return redirect()->route('community.index')
             ->with('success', 'Post deleted successfully!');
+    }
+
+    public function like(Request $request, Post $post)
+    {
+        $user = auth()->user();
+        
+        // Check if user already liked this post
+        $existingLike = DB::table('post_likes')
+            ->where('post_id', $post->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existingLike) {
+            // Unlike the post
+            DB::table('post_likes')
+                ->where('post_id', $post->id)
+                ->where('user_id', $user->id)
+                ->delete();
+            
+            $isLiked = false;
+        } else {
+            // Like the post
+            DB::table('post_likes')->insert([
+                'post_id' => $post->id,
+                'user_id' => $user->id,
+                'created_at' => now(),
+            ]);
+            
+            $isLiked = true;
+        }
+
+        // Get updated like count
+        $likesCount = DB::table('post_likes')
+            ->where('post_id', $post->id)
+            ->count();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'likes' => $likesCount,
+                'is_liked' => $isLiked,
+            ]);
+        }
+
+        return back();
+    }
+
+    public function bookmark(Request $request, Post $post)
+    {
+        $user = auth()->user();
+        
+        // Check if user already bookmarked this post
+        $existingBookmark = DB::table('post_bookmarks')
+            ->where('post_id', $post->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existingBookmark) {
+            // Remove bookmark
+            DB::table('post_bookmarks')
+                ->where('post_id', $post->id)
+                ->where('user_id', $user->id)
+                ->delete();
+            
+            $isBookmarked = false;
+        } else {
+            // Add bookmark
+            DB::table('post_bookmarks')->insert([
+                'post_id' => $post->id,
+                'user_id' => $user->id,
+                'created_at' => now(),
+            ]);
+            
+            $isBookmarked = true;
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'is_bookmarked' => $isBookmarked,
+            ]);
+        }
+
+        return back();
     }
 }
