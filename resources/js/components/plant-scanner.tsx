@@ -82,7 +82,7 @@ const PlantScanner: React.FC = () => {
     formData.append('image', selectedImage);
 
     try {
-      const response = await axios.post('/api/predict', formData, {
+      const response = await axios.post('/predictions', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
