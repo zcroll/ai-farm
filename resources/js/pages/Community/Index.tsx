@@ -63,16 +63,16 @@ interface Props {
 
 export default function CommunityIndex({ posts, categories, featuredPosts, filters }: Props) {
     const [search, setSearch] = useState(filters.search);
-    const [category, setCategory] = useState(filters.category);
+    const [category, setCategory] = useState(filters.category || 'all');
     const [sortBy, setSortBy] = useState('latest');
 
     const handleSearch = () => {
-        router.get('/community', { search, category, sort: sortBy }, { preserveState: true });
+        router.get('/community', { search, category: category === 'all' ? '' : category, sort: sortBy }, { preserveState: true });
     };
 
     const handleCategoryChange = (value: string) => {
         setCategory(value);
-        router.get('/community', { search, category: value, sort: sortBy }, { preserveState: true });
+        router.get('/community', { search, category: value === 'all' ? '' : value, sort: sortBy }, { preserveState: true });
     };
 
     const handleSortChange = (value: string) => {
@@ -107,10 +107,10 @@ export default function CommunityIndex({ posts, categories, featuredPosts, filte
     const stats = {
         totalPosts: posts.total,
         totalMembers: 1250, // This could come from props in real app
-        todayPosts: posts.data.filter(p => 
+        todayPosts: (posts.data || []).filter(p => 
             new Date(p.published_at).toDateString() === new Date().toDateString()
         ).length,
-        featuredCount: featuredPosts.length
+        featuredCount: (featuredPosts || []).length
     };
 
     return (
@@ -190,7 +190,7 @@ export default function CommunityIndex({ posts, categories, featuredPosts, filte
                                         <SelectValue placeholder="All Categories" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-gray-800 border-gray-700">
-                                        <SelectItem value="">All Categories</SelectItem>
+                                        <SelectItem value="all">All Categories</SelectItem>
                                         {categories.map(cat => (
                                             <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                                         ))}
@@ -215,14 +215,14 @@ export default function CommunityIndex({ posts, categories, featuredPosts, filte
                     </Card>
 
                     {/* Featured Posts */}
-                    {featuredPosts.length > 0 && (
+                    {((featuredPosts || []).length > 0) && (
                         <div className="mb-8">
                             <div className="flex items-center gap-2 mb-4">
                                 <Star className="h-5 w-5 text-yellow-500" />
                                 <h2 className="text-xl font-semibold text-white">Featured Posts</h2>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {featuredPosts.slice(0, 2).map((post, index) => (
+                                {(featuredPosts || []).slice(0, 2).map((post, index) => (
                                     <motion.div
                                         key={post.id}
                                         initial={{ opacity: 0, x: -20 }}
@@ -257,7 +257,7 @@ export default function CommunityIndex({ posts, categories, featuredPosts, filte
                                                             </span>
                                                             <span className="flex items-center gap-1">
                                                                 <MessageCircle className="h-3 w-3" />
-                                                                {post.comments.length}
+                                                                {(post.comments || []).length}
                                                             </span>
                                                         </div>
                                                         <span>{formatDate(post.published_at)}</span>
@@ -276,13 +276,13 @@ export default function CommunityIndex({ posts, categories, featuredPosts, filte
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-semibold text-white">Recent Discussions</h2>
                             <div className="text-sm text-gray-400">
-                                Showing {posts.data.length} of {posts.total} posts
+                                Showing {(posts.data || []).length} of {posts.total} posts
                             </div>
                         </div>
 
-                        {posts.data.length > 0 ? (
+                        {((posts.data || []).length > 0) ? (
                             <div className="space-y-4">
-                                {posts.data.map((post, index) => (
+                                {(posts.data || []).map((post, index) => (
                                     <motion.div
                                         key={post.id}
                                         initial={{ opacity: 0, y: 20 }}
@@ -306,7 +306,7 @@ export default function CommunityIndex({ posts, categories, featuredPosts, filte
                                                                 <Badge variant="outline" className={`text-xs ${getCategoryColor(post.category)}`}>
                                                                     {post.category}
                                                                 </Badge>
-                                                                {post.tags.map(tag => (
+                                                                {(post.tags || []).map(tag => (
                                                                     <Badge key={tag} variant="secondary" className="text-xs bg-gray-800 text-gray-300">
                                                                         #{tag}
                                                                     </Badge>
@@ -337,7 +337,7 @@ export default function CommunityIndex({ posts, categories, featuredPosts, filte
                                                                     </span>
                                                                     <span className="flex items-center gap-1">
                                                                         <MessageCircle className="h-3 w-3" />
-                                                                        {post.comments.length}
+                                                                        {(post.comments || []).length}
                                                                     </span>
                                                                 </div>
                                                             </div>

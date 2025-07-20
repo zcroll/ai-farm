@@ -260,7 +260,7 @@ export default function CommunityShow({ post, auth }: Props) {
               <div className="flex items-start gap-4">
                 <Avatar className="h-12 w-12">
                   <AvatarFallback className="bg-purple-600 text-white">
-                    {post.user.name.charAt(0).toUpperCase()}
+                    {post.user?.name ? post.user.name.charAt(0).toUpperCase() : "?"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
@@ -270,7 +270,7 @@ export default function CommunityShow({ post, auth }: Props) {
                     <Badge className={getCategoryColor(post.category)}>
                       {post.category}
                     </Badge>
-                    {post.tags.map(tag => (
+                    {(post.tags || []).map(tag => (
                       <Badge key={tag} variant="secondary" className="bg-gray-800 text-gray-300">
                         #{tag}
                       </Badge>
@@ -278,7 +278,7 @@ export default function CommunityShow({ post, auth }: Props) {
                   </div>
                   <CardTitle className="text-2xl text-white mb-3">{post.title}</CardTitle>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
-                    <span>by {post.user.name}</span>
+                    <span>by {post.user?.name || "Unknown"}</span>
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {formatDate(post.published_at)}
@@ -403,7 +403,7 @@ export default function CommunityShow({ post, auth }: Props) {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg text-white flex items-center gap-2">
                   <MessageCircle className="h-5 w-5" />
-                  Discussion ({post.comments.length})
+                  Discussion ({(post.comments || []).length})
                 </CardTitle>
                 {!showCommentForm && (
                   <Button 
@@ -417,9 +417,9 @@ export default function CommunityShow({ post, auth }: Props) {
               </div>
             </CardHeader>
             <CardContent className="pt-0">
-              {post.comments.length > 0 ? (
+              {(post.comments || []).length > 0 ? (
                 <div className="space-y-4">
-                  {post.comments.map(comment => renderComment(comment))}
+                  {(post.comments || []).map(comment => renderComment(comment))}
                 </div>
               ) : (
                 <div className="text-center py-12">
