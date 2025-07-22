@@ -55,7 +55,23 @@ interface Disease {
 }
 
 interface DiseaseLibraryProps {
-  diseases: Disease[];
+  diseases: { data: Disease[] } & {
+    links: {
+      first: string;
+      last: string;
+      prev: string | null;
+      next: string | null;
+    };
+    meta: {
+      current_page: number;
+      from: number;
+      last_page: number;
+      path: string;
+      per_page: number;
+      to: number;
+      total: number;
+    };
+  };
   plantTypes: string[];
 }
 
@@ -85,7 +101,7 @@ const DiseaseLibrary: React.FC<DiseaseLibraryProps> = ({ diseases, plantTypes })
 
   // Get unique severity levels
   const severityLevels = useMemo(() => {
-    const levels = Array.from(new Set(diseases.map(d => d.severity_level).filter(Boolean)));
+    const levels = Array.from(new Set((diseases.data || []).map(d => d.severity_level).filter(Boolean)));
     return levels.sort((a, b) => {
       const order = ['none', 'low', 'moderate', 'moderate to high', 'high'];
       return order.indexOf(a.toLowerCase()) - order.indexOf(b.toLowerCase());
@@ -94,7 +110,7 @@ const DiseaseLibrary: React.FC<DiseaseLibraryProps> = ({ diseases, plantTypes })
 
   // Filter diseases based on search and filters
   const filteredDiseases = useMemo(() => {
-    return diseases.filter(disease => {
+    return (diseases.data || []).filter(disease => {
       const matchesSearch = searchTerm === '' || 
         disease.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         disease.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,10 +125,10 @@ const DiseaseLibrary: React.FC<DiseaseLibraryProps> = ({ diseases, plantTypes })
 
   // Get statistics
   const stats = useMemo(() => {
-    const total = diseases.length;
-    const healthy = diseases.filter(d => d.name.toLowerCase().includes('healthy')).length;
+    const total = (diseases.data || []).length;
+    const healthy = (diseases.data || []).filter(d => d.name.toLowerCase().includes('healthy')).length;
     const diseased = total - healthy;
-    const plantTypeCounts = diseases.reduce((acc, disease) => {
+    const plantTypeCounts = (diseases.data || []).reduce((acc, disease) => {
       acc[disease.plant_type] = (acc[disease.plant_type] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
@@ -223,7 +239,7 @@ const DiseaseLibrary: React.FC<DiseaseLibraryProps> = ({ diseases, plantTypes })
               </div>
               <div className="mt-4 flex items-center justify-between">
                 <div className="text-sm text-gray-400">
-                  Showing {filteredDiseases.length} of {diseases.length} diseases
+                  Showing {filteredDiseases.length} of {diseases.data.length} diseases
                 </div>
                 <div className="flex gap-2">
                   <Button

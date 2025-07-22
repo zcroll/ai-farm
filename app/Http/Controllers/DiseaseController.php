@@ -34,7 +34,7 @@ class DiseaseController extends Controller
         // Get unique plant types for filter
         $plantTypes = Disease::distinct()->pluck('plant_type')->sort()->values();
         
-        return Inertia::render('Diseases/Index', [
+        return Inertia::render('DiseaseLibrary', [
             'diseases' => $diseases,
             'plantTypes' => $plantTypes,
             'filters' => $request->only(['search', 'plant_type']),
