@@ -16,6 +16,7 @@ import {
   Maximize2
 } from 'lucide-react';
 import axios from 'axios';
+import MentionInput from '@/components/mention-input';
 
 interface Message {
   id: string;
@@ -40,6 +41,16 @@ interface Scan {
   confidence: number;
   created_at: string;
   disease?: Disease;
+}
+
+interface MentionedDisease {
+  id: number;
+  name: string;
+  displayName: string;
+  plantType: string;
+  severity: string;
+  treatment: string;
+  prevention: string;
 }
 
 interface AIChatWidgetProps {
@@ -84,6 +95,7 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '', userScans =
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mentionedDiseases, setMentionedDiseases] = useState<MentionedDisease[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -91,8 +103,13 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '', userScans =
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    scrollToBottom();
+    const timeoutId = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [messages]);
 
   useEffect(() => {
@@ -113,6 +130,7 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '', userScans =
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
+    setMentionedDiseases([]);
     setIsLoading(true);
     setError(null);
 
@@ -133,6 +151,15 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '', userScans =
           prevention: disease.prevention_methods,
           severity: disease.severity_level,
           plantType: disease.plant_type
+        })),
+        mentionedDiseases: mentionedDiseases.map(disease => ({
+          id: disease.id,
+          name: disease.name,
+          displayName: disease.displayName,
+          plantType: disease.plantType,
+          severity: disease.severity,
+          treatment: disease.treatment,
+          prevention: disease.prevention
         }))
       };
 
@@ -207,8 +234,8 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '', userScans =
             transition={{ duration: 0.2 }}
             className="mb-4"
           >
-            <Card className="w-96 h-[32rem] md:w-[28rem] md:h-[36rem] bg-gray-900 border-gray-700 shadow-2xl">
-              <CardHeader className="pb-2">
+            <Card className="w-96 h-[32rem] md:w-[28rem] md:h-[36rem] bg-gray-900 border-gray-700 shadow-2xl flex flex-col">
+              <CardHeader className="pb-2 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Bot className="h-5 w-5 text-green-400" />
@@ -237,70 +264,72 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '', userScans =
               </CardHeader>
 
               {!isMinimized && (
-                <CardContent className="p-0 flex-1 flex flex-col">
-                  <ScrollArea className="flex-1 px-4">
-                    <div className="space-y-4 pb-4">
-                      {messages.map((message) => (
-                        <motion.div
-                          key={message.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          {message.role === 'assistant' && (
+                <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+                  <div className="flex-1 overflow-hidden">
+                    <div className="h-full overflow-y-auto px-4 py-4 ai-chat-scroll">
+                      <div className="space-y-4">
+                        {messages.map((message) => (
+                          <motion.div
+                            key={message.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            {message.role === 'assistant' && (
+                              <div className="flex-shrink-0">
+                                <Bot className="h-6 w-6 text-green-400" />
+                              </div>
+                            )}
+                            <div
+                              className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+                                message.role === 'user'
+                                  ? 'bg-green-600 text-white'
+                                  : 'bg-gray-800 text-gray-200'
+                              }`}
+                            >
+                              <p className="whitespace-pre-wrap">{message.content}</p>
+                              <p className={`text-xs mt-1 ${
+                                message.role === 'user' ? 'text-green-200' : 'text-gray-400'
+                              }`}>
+                                {formatTime(message.timestamp)}
+                              </p>
+                            </div>
+                            {message.role === 'user' && (
+                              <div className="flex-shrink-0">
+                                <User className="h-6 w-6 text-blue-400" />
+                              </div>
+                            )}
+                          </motion.div>
+                        ))}
+                        {isLoading && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex gap-3 justify-start"
+                          >
                             <div className="flex-shrink-0">
                               <Bot className="h-6 w-6 text-green-400" />
                             </div>
-                          )}
-                          <div
-                            className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-                              message.role === 'user'
-                                ? 'bg-green-600 text-white'
-                                : 'bg-gray-800 text-gray-200'
-                            }`}
-                          >
-                            <p className="whitespace-pre-wrap">{message.content}</p>
-                            <p className={`text-xs mt-1 ${
-                              message.role === 'user' ? 'text-green-200' : 'text-gray-400'
-                            }`}>
-                              {formatTime(message.timestamp)}
-                            </p>
-                          </div>
-                          {message.role === 'user' && (
-                            <div className="flex-shrink-0">
-                              <User className="h-6 w-6 text-blue-400" />
+                            <div className="bg-gray-800 rounded-lg px-3 py-2 text-sm">
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="h-4 w-4 animate-spin text-green-400" />
+                                <span className="text-gray-300">AI is thinking...</span>
+                              </div>
                             </div>
-                          )}
-                        </motion.div>
-                      ))}
-                      {isLoading && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="flex gap-3 justify-start"
-                        >
-                          <div className="flex-shrink-0">
-                            <Bot className="h-6 w-6 text-green-400" />
-                          </div>
-                          <div className="bg-gray-800 rounded-lg px-3 py-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin text-green-400" />
-                              <span className="text-gray-300">AI is thinking...</span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                      <div ref={messagesEndRef} />
+                          </motion.div>
+                        )}
+                        <div ref={messagesEndRef} />
+                      </div>
                     </div>
-                  </ScrollArea>
+                  </div>
 
                   {error && (
-                    <div className="px-4 pb-2">
+                    <div className="px-4 pb-2 flex-shrink-0">
                       <p className="text-xs text-red-400">{error}</p>
                     </div>
                   )}
 
-                  <div className="p-4 pt-0 space-y-3">
+                  <div className="p-4 pt-0 space-y-3 flex-shrink-0">
                     {/* Quick action buttons for disease-related questions */}
                     {userScans.length > 0 && (
                       <div className="flex flex-wrap gap-2">
@@ -334,15 +363,19 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '', userScans =
                     )}
 
                     <div className="flex gap-2">
-                      <Input
-                        ref={inputRef}
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Ask about plant health..."
-                        className="flex-1 bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
-                        disabled={isLoading}
-                      />
+                      <div className="flex-1">
+                        <MentionInput
+                          value={inputValue}
+                          onChange={(value, mentions) => {
+                            setInputValue(value);
+                            setMentionedDiseases(mentions);
+                          }}
+                          onKeyPress={handleKeyPress}
+                          placeholder="Ask about plant health... (Type @ to mention diseases)"
+                          disabled={isLoading}
+                          className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
+                        />
+                      </div>
                       <Button
                         onClick={handleSendMessage}
                         disabled={!inputValue.trim() || isLoading}

@@ -94,3 +94,63 @@ test('ai chat direct message accepts disease context', function () {
     expect($response->json('message'))->toBeString();
     expect(strlen($response->json('message')))->toBeGreaterThan(10);
 });
+
+test('disease search api returns results', function () {
+    $response = $this->actingAs(User::factory()->create())
+        ->getJson('/api/diseases/search?q=tomato&limit=3');
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'success',
+            'data' => [
+                '*' => [
+                    'id',
+                    'name',
+                    'displayName',
+                    'plantType',
+                    'description',
+                    'severity',
+                    'treatment',
+                    'prevention'
+                ]
+            ]
+        ]);
+
+    expect($response->json('success'))->toBeTrue();
+    expect($response->json('data'))->toBeArray();
+});
+
+test('ai chat with mentioned diseases provides focused response', function () {
+    $user = User::factory()->create();
+
+    $diseaseContext = [
+        'recentScans' => [],
+        'knownDiseases' => [],
+        'mentionedDiseases' => [
+            [
+                'id' => 1,
+                'name' => 'Tomato___Early_blight',
+                'displayName' => 'Tomato - Early blight',
+                'plantType' => 'Tomato',
+                'severity' => 'Moderate',
+                'treatment' => 'Apply fungicides preventatively',
+                'prevention' => 'Plant resistant varieties'
+            ]
+        ]
+    ];
+
+    $response = $this->actingAs($user)
+        ->postJson('/ai-chat/message', [
+            'message' => 'What should I do about @Tomato - Early blight on my plants?',
+            'model' => 'gemini-2.0-flash',
+            'diseaseContext' => $diseaseContext
+        ]);
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'message'
+        ]);
+
+    expect($response->json('message'))->toBeString();
+    expect(strlen($response->json('message')))->toBeGreaterThan(10);
+});

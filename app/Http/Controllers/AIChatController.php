@@ -116,6 +116,7 @@ class AIChatController extends Controller
             'diseaseContext' => 'nullable|array',
             'diseaseContext.recentScans' => 'nullable|array',
             'diseaseContext.knownDiseases' => 'nullable|array',
+            'diseaseContext.mentionedDiseases' => 'nullable|array',
         ]);
 
         try {
@@ -205,7 +206,23 @@ class AIChatController extends Controller
                     }
                 }
 
-                $prompt .= "\nPlease use this context to provide personalized advice. If the user asks about diseases they've scanned, reference their specific cases. Help them with treatment, prevention, and management of their plant health issues.\n\n";
+                // Add mentioned diseases (diseases specifically referenced with @)
+                if (!empty($diseaseContext['mentionedDiseases'])) {
+                    $prompt .= "\nSPECIFICALLY MENTIONED DISEASES (User referenced these with @):\n";
+                    $prompt .= "The user has specifically mentioned these diseases in their question, so focus your response on these:\n";
+                    foreach ($diseaseContext['mentionedDiseases'] as $disease) {
+                        $prompt .= "- {$disease['displayName']} ({$disease['plantType']}) - Severity: {$disease['severity']}\n";
+                        if (!empty($disease['treatment'])) {
+                            $prompt .= "  Treatment: {$disease['treatment']}\n";
+                        }
+                        if (!empty($disease['prevention'])) {
+                            $prompt .= "  Prevention: {$disease['prevention']}\n";
+                        }
+                    }
+                    $prompt .= "\nIMPORTANT: The user has specifically mentioned these diseases, so prioritize information about them in your response.\n";
+                }
+
+                $prompt .= "\nPlease use this context to provide personalized advice. If the user asks about diseases they've scanned, reference their specific cases. If they mentioned specific diseases with @, focus primarily on those diseases. Help them with treatment, prevention, and management of their plant health issues.\n\n";
             }
 
             $prompt .= "User Question: " . $message;
@@ -230,7 +247,10 @@ class AIChatController extends Controller
             ];
 
             // If we have disease context, provide more specific fallback
-            if ($diseaseContext && !empty($diseaseContext['recentScans'])) {
+            if ($diseaseContext && !empty($diseaseContext['mentionedDiseases'])) {
+                $mentionedNames = array_column($diseaseContext['mentionedDiseases'], 'displayName');
+                $responses[] = "I see you mentioned " . implode(', ', array_slice($mentionedNames, 0, 2)) . ". I'd be happy to help you with specific information about these diseases, including treatment and prevention strategies.";
+            } elseif ($diseaseContext && !empty($diseaseContext['recentScans'])) {
                 $recentDiseases = array_column($diseaseContext['recentScans'], 'disease');
                 $responses[] = "I see you've recently dealt with " . implode(', ', array_slice($recentDiseases, 0, 2)) . ". I'd be happy to help you with treatment and prevention strategies for these conditions.";
             }

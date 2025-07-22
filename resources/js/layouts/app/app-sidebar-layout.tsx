@@ -31,7 +31,7 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                 userScans={userScans}
                 userDiseases={userDiseases}
             />
-            {showQuickScanFab && <QuickScanFab />}
+            {/*{showQuickScanFab && <QuickScanFab />}*/}
         </>
     );
 }

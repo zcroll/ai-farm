@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test @ Mention Functionality</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .test-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .dropdown.show {
+            display: block;
+        }
+        .dropdown-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .dropdown-item:hover {
+            background-color: #f5f5f5;
+        }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        .input-container {
+            position: relative;
+        }
+        .instructions {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 6px;
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>@ Mention Test</h1>
+        
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <ol>
+                <li>Type <strong>@</strong> in the input field below</li>
+                <li>You should see a dropdown with "Test Disease"</li>
+                <li>Try typing <strong>@tom</strong> to search for tomato diseases</li>
+                <li>Click on a suggestion to select it</li>
+            </ol>
+        </div>
+
+        <div class="input-container">
+            <input 
+                type="text" 
+                class="test-input" 
+                id="testInput"
+                placeholder="Type @ to test mention functionality..."
+            >
+            <div class="dropdown" id="dropdown">
+                <!-- Dropdown items will be inserted here -->
+            </div>
+        </div>
+
+        <div class="status" id="status">
+            Ready to test...
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('testInput');
+        const dropdown = document.getElementById('dropdown');
+        const status = document.getElementById('status');
+
+        let currentMention = null;
+        let suggestions = [];
+
+        // Test data
+        const testSuggestions = [
+            {
+                id: 1,
+                displayName: 'Test Disease',
+                plantType: 'Test Plant',
+                description: 'This is a test disease for debugging',
+                severity: 'Medium'
+            },
+            {
+                id: 2,
+                displayName: 'Tomato - Early Blight',
+                plantType: 'Tomato',
+                description: 'A fungal disease affecting tomato leaves',
+                severity: 'High'
+            },
+            {
+                id: 3,
+                displayName: 'Tomato - Late Blight',
+                plantType: 'Tomato',
+                description: 'A serious disease that can destroy tomato crops',
+                severity: 'High'
+            }
+        ];
+
+        function showDropdown() {
+            dropdown.classList.add('show');
+        }
+
+        function hideDropdown() {
+            dropdown.classList.remove('show');
+        }
+
+        function updateStatus(message) {
+            status.textContent = message;
+        }
+
+        function renderSuggestions(suggestions) {
+            dropdown.innerHTML = '';
+            
+            if (suggestions.length === 0) {
+                dropdown.innerHTML = '<div class="dropdown-item">No diseases found</div>';
+                return;
+            }
+
+            suggestions.forEach(suggestion => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.innerHTML = `
+                    <strong>${suggestion.displayName}</strong> (${suggestion.plantType})
+                    <br>
+                    <small style="color: #666;">${suggestion.description}</small>
+                    <br>
+                    <small style="color: ${suggestion.severity === 'High' ? 'red' : suggestion.severity === 'Medium' ? 'orange' : 'green'};">
+                        Severity: ${suggestion.severity}
+                    </small>
+                `;
+                
+                item.addEventListener('click', () => {
+                    selectSuggestion(suggestion);
+                });
+                
+                dropdown.appendChild(item);
+            });
+        }
+
+        function selectSuggestion(suggestion) {
+            if (!currentMention) return;
+
+            const beforeMention = input.value.substring(0, currentMention.start);
+            const afterMention = input.value.substring(currentMention.start + currentMention.query.length + 1);
+            const mentionText = `@${suggestion.displayName}`;
+            
+            input.value = beforeMention + mentionText + ' ' + afterMention;
+            
+            hideDropdown();
+            currentMention = null;
+            
+            updateStatus(`Selected: ${suggestion.displayName}`);
+        }
+
+        function searchSuggestions(query) {
+            if (query === '') {
+                return [testSuggestions[0]]; // Show test disease when just @ is typed
+            }
+            
+            return testSuggestions.filter(suggestion => 
+                suggestion.displayName.toLowerCase().includes(query.toLowerCase()) ||
+                suggestion.plantType.toLowerCase().includes(query.toLowerCase())
+            );
+        }
+
+        input.addEventListener('input', function(e) {
+            const value = e.target.value;
+            const cursorPosition = e.target.selectionStart || 0;
+            
+            updateStatus(`Input: "${value}", Cursor: ${cursorPosition}`);
+            
+            // Check for @ mentions
+            const beforeCursor = value.substring(0, cursorPosition);
+            const atIndex = beforeCursor.lastIndexOf('@');
+            
+            if (atIndex !== -1) {
+                const afterAt = beforeCursor.substring(atIndex + 1);
+                const spaceIndex = afterAt.indexOf(' ');
+                
+                if (spaceIndex === -1) {
+                    // We're in the middle of typing a mention
+                    currentMention = { start: atIndex, query: afterAt };
+                    
+                    const filteredSuggestions = searchSuggestions(afterAt);
+                    suggestions = filteredSuggestions;
+                    
+                    renderSuggestions(filteredSuggestions);
+                    showDropdown();
+                    
+                    updateStatus(`Mention detected: "${afterAt}", Found ${filteredSuggestions.length} suggestions`);
+                } else {
+                    // Mention is complete
+                    hideDropdown();
+                    currentMention = null;
+                    updateStatus('Mention complete');
+                }
+            } else {
+                hideDropdown();
+                currentMention = null;
+                updateStatus('No mention detected');
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.input-container')) {
+                hideDropdown();
+            }
+        });
+
+        updateStatus('Ready to test @ mentions!');
+    </script>
+</body>
+</html>

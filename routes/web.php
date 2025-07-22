@@ -75,6 +75,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/posts/{post}/comments', [\App\Http\Controllers\Api\CommunityController::class, 'getComments']);
         Route::get('/posts/search', [\App\Http\Controllers\Api\CommunityController::class, 'searchPosts']);
         Route::get('/user/stats', [\App\Http\Controllers\Api\CommunityController::class, 'getUserStats']);
+
+        // Disease search for @ mentions
+        Route::get('/diseases/search', [DiseaseController::class, 'searchForMentions']);
     });
 
     // AI Chat routes
