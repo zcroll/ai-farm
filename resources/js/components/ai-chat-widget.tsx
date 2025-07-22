@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { 
-  MessageSquare, 
-  X, 
-  Send, 
-  Bot, 
-  User, 
+import {
+  MessageSquare,
+  X,
+  Send,
+  Bot,
+  User,
   Loader2,
   Minimize2,
   Maximize2
@@ -24,18 +24,60 @@ interface Message {
   timestamp: Date;
 }
 
-interface AIChatWidgetProps {
-  className?: string;
+interface Disease {
+  id: number;
+  name: string;
+  description: string;
+  treatment_suggestions: string;
+  prevention_methods: string;
+  severity_level: string;
+  plant_type: string;
 }
 
-const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '' }) => {
+interface Scan {
+  id: number;
+  predicted_disease: string;
+  confidence: number;
+  created_at: string;
+  disease?: Disease;
+}
+
+interface AIChatWidgetProps {
+  className?: string;
+  userScans?: Scan[];
+  userDiseases?: Disease[];
+}
+
+const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '', userScans = [], userDiseases = [] }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  // Generate personalized welcome message based on user's scan history
+  const generateWelcomeMessage = () => {
+    const recentDiseases = userScans.filter(scan => !scan.predicted_disease.includes('healthy')).slice(0, 3);
+    const hasHealthyPlants = userScans.some(scan => scan.predicted_disease.includes('healthy'));
+
+    let welcomeMessage = 'Hello! I\'m your AI plant health assistant. ';
+
+    if (recentDiseases.length > 0) {
+      const diseaseNames = recentDiseases.map(scan =>
+        scan.predicted_disease.replace(/_/g, ' ').replace('___', ' - ')
+      ).join(', ');
+      welcomeMessage += `I see you've recently scanned plants with: ${diseaseNames}. `;
+      welcomeMessage += 'I can help you with treatment advice, prevention methods, and answer any questions about these conditions. ';
+    } else if (hasHealthyPlants) {
+      welcomeMessage += 'Great to see your plants are healthy! ';
+    }
+
+    welcomeMessage += 'I can help you with plant disease identification, treatment advice, and gardening tips. How can I help you today?';
+
+    return welcomeMessage;
+  };
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m your AI plant health assistant. I can help you with plant disease identification, treatment advice, and gardening tips. How can I help you today?',
+      content: generateWelcomeMessage(),
       timestamp: new Date()
     }
   ]);
@@ -75,9 +117,29 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '' }) => {
     setError(null);
 
     try {
+      // Prepare disease context for the AI
+      const diseaseContext = {
+        recentScans: userScans.slice(0, 5).map(scan => ({
+          disease: scan.predicted_disease.replace(/_/g, ' ').replace('___', ' - '),
+          confidence: Math.round(scan.confidence * 100),
+          date: scan.created_at,
+          treatment: scan.disease?.treatment_suggestions || null,
+          severity: scan.disease?.severity_level || null
+        })),
+        knownDiseases: userDiseases.slice(0, 10).map(disease => ({
+          name: disease.name.replace(/_/g, ' ').replace('___', ' - '),
+          description: disease.description,
+          treatment: disease.treatment_suggestions,
+          prevention: disease.prevention_methods,
+          severity: disease.severity_level,
+          plantType: disease.plant_type
+        }))
+      };
+
       const response = await axios.post('/ai-chat/message', {
         message: userMessage.content,
         model: 'gemini-2.0-flash',
+        diseaseContext: diseaseContext
       }, {
         headers: {
           'Content-Type': 'application/json',
@@ -117,9 +179,9 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '' }) => {
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -145,7 +207,7 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '' }) => {
             transition={{ duration: 0.2 }}
             className="mb-4"
           >
-            <Card className="w-80 h-96 bg-gray-900 border-gray-700 shadow-2xl">
+            <Card className="w-96 h-[32rem] md:w-[28rem] md:h-[36rem] bg-gray-900 border-gray-700 shadow-2xl">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -173,10 +235,10 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '' }) => {
                   </div>
                 </div>
               </CardHeader>
-              
+
               {!isMinimized && (
-                <CardContent className="p-0 h-80">
-                  <ScrollArea className="h-64 px-4">
+                <CardContent className="p-0 flex-1 flex flex-col">
+                  <ScrollArea className="flex-1 px-4">
                     <div className="space-y-4 pb-4">
                       {messages.map((message) => (
                         <motion.div
@@ -231,14 +293,46 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '' }) => {
                       <div ref={messagesEndRef} />
                     </div>
                   </ScrollArea>
-                  
+
                   {error && (
                     <div className="px-4 pb-2">
                       <p className="text-xs text-red-400">{error}</p>
                     </div>
                   )}
-                  
-                  <div className="p-4 pt-0">
+
+                  <div className="p-4 pt-0 space-y-3">
+                    {/* Quick action buttons for disease-related questions */}
+                    {userScans.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setInputValue("What treatment do you recommend for my recent plant diseases?")}
+                          className="text-xs bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                        >
+                          Treatment advice
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setInputValue("How can I prevent these diseases from spreading?")}
+                          className="text-xs bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                        >
+                          Prevention tips
+                        </Button>
+                        {userScans.some(scan => !scan.predicted_disease.includes('healthy')) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setInputValue("Is my plant disease serious? What should I do immediately?")}
+                            className="text-xs bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
+                          >
+                            Urgency check
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex gap-2">
                       <Input
                         ref={inputRef}
@@ -265,7 +359,7 @@ const AIChatWidget: React.FC<AIChatWidgetProps> = ({ className = '' }) => {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}

@@ -9,10 +9,14 @@ import { type PropsWithChildren } from 'react';
 import { usePage } from '@inertiajs/react';
 
 export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWithChildren<{ breadcrumbs?: BreadcrumbItem[] }>) {
-    const { url } = usePage();
-    
+    const { url, props } = usePage();
+
     // Don't show the FAB on the scan page itself
     const showQuickScanFab = !url.startsWith('/scan');
+
+    // Extract user scans and diseases from page props if available
+    const userScans = (props as any)?.history?.data || (props as any)?.scans?.data || [];
+    const userDiseases = (props as any)?.diseases || [];
 
     return (
         <>
@@ -23,7 +27,10 @@ export default function AppSidebarLayout({ children, breadcrumbs = [] }: PropsWi
                     {children}
                 </AppContent>
             </AppShell>
-            <AIChatWidget />
+            <AIChatWidget
+                userScans={userScans}
+                userDiseases={userDiseases}
+            />
             {showQuickScanFab && <QuickScanFab />}
         </>
     );

@@ -54,6 +54,22 @@ interface DashboardProps {
     statistics: any;
     source_url: string | null;
   }>;
+  allDiseases?: Array<{
+    id: number;
+    name: string;
+    description: string;
+    scientific_details: string;
+    treatment_suggestions: string;
+    prevention_methods: string;
+    required_tools: string;
+    environmental_factors: string;
+    severity_level: string;
+    average_treatment_time: number;
+    plant_type: string;
+    seasonal_prevalence: Record<string, string>;
+    statistics: any;
+    source_url: string | null;
+  }>;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases }) => {
@@ -91,7 +107,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
   return (
     <AppLayout>
       <Head title="Dashboard" />
-      
+
       <div className="py-6 px-4 sm:px-6 lg:px-8 bg-black min-h-screen">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -99,7 +115,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
               <h1 className="text-2xl font-bold text-white">Plant Health Dashboard</h1>
               <p className="text-gray-400">Monitor your plant health and get detailed insights</p>
             </div>
-            
+
             <div className="flex gap-3">
               <Link href="/scan">
                 <Button className="bg-green-600 hover:bg-green-700 text-lg px-6 py-3">
@@ -154,7 +170,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
               </Card>
             </Link>
           </div>
-          
+
           <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="bg-gray-900 border border-gray-800">
               <TabsTrigger value="overview" className="data-[state=active]:bg-gray-800">
@@ -167,7 +183,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                 Disease Statistics
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="overview" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <Card className="bg-gray-900 border-gray-800">
@@ -181,7 +197,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-gray-900 border-gray-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg text-white">Healthy Plants</CardTitle>
@@ -196,7 +212,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                     </p>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-gray-900 border-gray-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg text-white">Diseased Plants</CardTitle>
@@ -220,7 +236,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
 
               {/* Plant Health Tracker */}
               <div className="mb-6">
-                <PlantHealthTracker 
+                <PlantHealthTracker
                   recentScans={history.data.map(scan => ({
                     id: scan.id,
                     date: scan.created_at,
@@ -229,12 +245,12 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                     plant_type: scan.predicted_disease.split('___')[0]?.replace(/_/g, ' ') || 'Unknown',
                     is_healthy: scan.predicted_disease.includes('healthy')
                   }))}
-                  plantTypes={Array.from(new Set(history.data.map(scan => 
+                  plantTypes={Array.from(new Set(history.data.map(scan =>
                     scan.predicted_disease.split('___')[0]?.replace(/_/g, ' ') || 'Unknown'
                   )))}
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="bg-gray-900 border-gray-800">
                   <CardHeader>
@@ -244,15 +260,15 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                     <div className="space-y-4">
                       {history.data.length > 0 ? (
                         history.data.slice(0, 5).map((scan) => (
-                          <Link 
-                            key={scan.id} 
+                          <Link
+                            key={scan.id}
                             href={`/scan/${scan.id}`}
                             className="flex items-center gap-4 p-4 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors border border-gray-700 hover:border-gray-600"
                           >
                             <div className="h-16 w-16 rounded-lg overflow-hidden border border-gray-600">
-                              <img 
-                                src={`/storage/${scan.image_path}`} 
-                                alt="Plant scan" 
+                              <img
+                                src={`/storage/${scan.image_path}`}
+                                alt="Plant scan"
                                 className="h-full w-full object-cover"
                               />
                             </div>
@@ -270,7 +286,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                               )}
                             </div>
                             <div className="text-right">
-                              <Badge 
+                              <Badge
                                 variant={scan.predicted_disease.includes('healthy') ? "success" : "destructive"}
                                 className="mb-2"
                               >
@@ -295,11 +311,11 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                           </Link>
                         </div>
                       )}
-                      
+
                       {history.data.length > 5 && (
                         <div className="text-center pt-2">
-                          <Button 
-                            variant="link" 
+                          <Button
+                            variant="link"
                             className="text-blue-400 hover:text-blue-300"
                             onClick={() => setActiveTab('history')}
                           >
@@ -310,7 +326,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-gray-900 border-gray-800">
                   <CardHeader>
                     <CardTitle className="text-white">Common Conditions</CardTitle>
@@ -339,7 +355,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                     ) : (
                       <p className="text-gray-400 text-center py-4">No data available</p>
                     )}
-                    
+
                     <div className="mt-6">
                       <Link href="/disease-library">
                         <Button variant="outline" className="w-full border-gray-700 text-white hover:bg-gray-800">
@@ -351,7 +367,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                 </Card>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="history" className="space-y-6">
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
@@ -361,15 +377,15 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                   <div className="space-y-4">
                     {history.data.length > 0 ? (
                       history.data.map((scan) => (
-                        <Link 
-                          key={scan.id} 
+                        <Link
+                          key={scan.id}
                           href={`/scan/${scan.id}`}
                           className="flex items-center gap-4 p-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
                         >
                           <div className="h-12 w-12 rounded-md overflow-hidden">
-                            <img 
-                              src={`/storage/${scan.image_path}`} 
-                              alt="Plant scan" 
+                            <img
+                              src={`/storage/${scan.image_path}`}
+                              alt="Plant scan"
                               className="h-full w-full object-cover"
                             />
                           </div>
@@ -382,7 +398,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                             </p>
                           </div>
                           <div className="text-right">
-                            <Badge 
+                            <Badge
                               variant={scan.predicted_disease.includes('healthy') ? "success" : "destructive"}
                               className="mb-1"
                             >
@@ -401,7 +417,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="statistics" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="bg-gray-900 border-gray-800">
@@ -442,7 +458,7 @@ const Dashboard: React.FC<DashboardProps> = ({ auth, stats, history, diseases })
                     )}
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-gray-900 border-gray-800">
                   <CardHeader>
                     <CardTitle className="text-white">Disease Library</CardTitle>

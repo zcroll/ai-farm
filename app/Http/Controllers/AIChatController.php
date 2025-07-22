@@ -113,11 +113,18 @@ class AIChatController extends Controller
         $validated = $request->validate([
             'message' => 'required|string|max:2000',
             'model' => 'nullable|string|in:gpt-3.5-turbo,gpt-4,claude-3,gemini-2.0-flash',
+            'diseaseContext' => 'nullable|array',
+            'diseaseContext.recentScans' => 'nullable|array',
+            'diseaseContext.knownDiseases' => 'nullable|array',
         ]);
 
         try {
             // Generate AI response directly without saving to database
-            $aiResponse = $this->generateDirectAIResponse($validated['message'], $validated['model'] ?? 'gemini-2.0-flash');
+            $aiResponse = $this->generateDirectAIResponse(
+                $validated['message'],
+                $validated['model'] ?? 'gemini-2.0-flash',
+                $validated['diseaseContext'] ?? null
+            );
 
             return response()->json([
                 'message' => $aiResponse,
@@ -161,11 +168,47 @@ class AIChatController extends Controller
     /**
      * Generate AI response for direct messages (chatput functionality)
      */
-    private function generateDirectAIResponse($message, $model = 'gemini-2.0-flash')
+    private function generateDirectAIResponse($message, $model = 'gemini-2.0-flash', $diseaseContext = null)
     {
         try {
-            // Create a prompt with system context
-            $prompt = "You are a helpful AI assistant specialized in plant disease detection and gardening advice. You can help users identify plant diseases, provide treatment recommendations, and answer gardening questions.\n\nUser: " . $message;
+            // Create a comprehensive prompt with disease context
+            $prompt = "You are a helpful AI assistant specialized in plant disease detection and gardening advice. You can help users identify plant diseases, provide treatment recommendations, and answer gardening questions.\n\n";
+
+            // Add disease context if available
+            if ($diseaseContext && !empty($diseaseContext)) {
+                $prompt .= "FARMER'S PLANT HEALTH CONTEXT:\n";
+
+                // Add recent scans information
+                if (!empty($diseaseContext['recentScans'])) {
+                    $prompt .= "\nRecent Plant Scans:\n";
+                    foreach ($diseaseContext['recentScans'] as $scan) {
+                        $prompt .= "- {$scan['disease']} (Confidence: {$scan['confidence']}%, Date: {$scan['date']})";
+                        if (!empty($scan['treatment'])) {
+                            $prompt .= " - Treatment: {$scan['treatment']}";
+                        }
+                        if (!empty($scan['severity'])) {
+                            $prompt .= " - Severity: {$scan['severity']}";
+                        }
+                        $prompt .= "\n";
+                    }
+                }
+
+                // Add known diseases information
+                if (!empty($diseaseContext['knownDiseases'])) {
+                    $prompt .= "\nKnown Diseases in Database:\n";
+                    foreach (array_slice($diseaseContext['knownDiseases'], 0, 5) as $disease) {
+                        $prompt .= "- {$disease['name']} ({$disease['plantType']}) - Severity: {$disease['severity']}\n";
+                        $prompt .= "  Description: {$disease['description']}\n";
+                        if (!empty($disease['treatment'])) {
+                            $prompt .= "  Treatment: " . substr($disease['treatment'], 0, 200) . "...\n";
+                        }
+                    }
+                }
+
+                $prompt .= "\nPlease use this context to provide personalized advice. If the user asks about diseases they've scanned, reference their specific cases. Help them with treatment, prevention, and management of their plant health issues.\n\n";
+            }
+
+            $prompt .= "User Question: " . $message;
 
             // Use Prism to generate response
             $response = prism()
@@ -179,12 +222,19 @@ class AIChatController extends Controller
         } catch (\Exception $e) {
             Log::error('Error generating direct AI response: ' . $e->getMessage());
 
-            // Fallback responses
+            // Fallback responses with context awareness
             $responses = [
                 "I understand you're asking about plant health. Based on your question, I'd recommend checking the soil moisture and ensuring proper drainage.",
                 "That's an interesting question about plant diseases. The symptoms you're describing could be related to several common issues. Let me help you identify the problem.",
                 "For plant disease prevention, I recommend regular monitoring, proper spacing, and maintaining good air circulation around your plants.",
             ];
+
+            // If we have disease context, provide more specific fallback
+            if ($diseaseContext && !empty($diseaseContext['recentScans'])) {
+                $recentDiseases = array_column($diseaseContext['recentScans'], 'disease');
+                $responses[] = "I see you've recently dealt with " . implode(', ', array_slice($recentDiseases, 0, 2)) . ". I'd be happy to help you with treatment and prevention strategies for these conditions.";
+            }
+
             return $responses[array_rand($responses)];
         }
     }

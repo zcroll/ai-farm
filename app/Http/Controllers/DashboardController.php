@@ -14,7 +14,19 @@ class DashboardController extends Controller
         $user = $request->user();
 
         $scans = $user->scans()->with('disease')->orderByDesc('created_at')->paginate(10);
-        $diseases = Disease::all();
+
+        // Get diseases that the user has encountered through scans
+        $userDiseaseNames = $user->scans()
+            ->whereNotNull('predicted_disease')
+            ->pluck('predicted_disease')
+            ->unique()
+            ->toArray();
+
+        // Get detailed disease information for diseases the user has encountered
+        $userDiseases = Disease::whereIn('name', $userDiseaseNames)->get();
+
+        // Get all diseases for reference
+        $allDiseases = Disease::all();
 
         $total = $user->scans()->count();
         $healthy = $user->scans()->where('predicted_disease', 'LIKE', '%healthy')->count();
@@ -44,7 +56,8 @@ class DashboardController extends Controller
             'auth' => $user,
             'stats' => $stats,
             'history' => $scans,
-            'diseases' => $diseases,
+            'diseases' => $userDiseases, // User's encountered diseases for AI context
+            'allDiseases' => $allDiseases, // All diseases for reference
         ]);
     }
 
