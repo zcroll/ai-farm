@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'prism' => [
+        'endpoint' => env('PRISM_ENDPOINT'),
+        'key' => env('PRISM_API_KEY'),
+    ],
+
 ];

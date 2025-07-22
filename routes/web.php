@@ -34,17 +34,17 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard routes
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Plant disease detection specific routes
     Route::get('/scan', [DashboardController::class, 'scan'])->name('scan');
     Route::get('/history', [DashboardController::class, 'history'])->name('history');
     Route::get('/scan/{id}', [DashboardController::class, 'showScan'])->name('scan.show');
-    
+
     // Disease Library routes
     Route::get('/diseases', [DiseaseController::class, 'diagnosed'])->name('diseases.index');
     Route::get('/disease-library', [DiseaseController::class, 'index'])->name('disease.library');
     Route::get('/diseases/{disease}', [DiseaseController::class, 'show'])->name('diseases.show');
-    
+
     // Community routes
     Route::resource('community', PostController::class)->names([
         'index' => 'community.index',
@@ -55,17 +55,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'update' => 'community.update',
         'destroy' => 'community.destroy',
     ]);
-    
+
     // Comments routes
     Route::post('/community/{post}/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::put('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::post('/comments/{comment}/like', [CommentController::class, 'like'])->name('comments.like');
-    
+
     // Post interaction routes
     Route::post('/community/{post}/like', [PostController::class, 'like'])->name('posts.like');
     Route::post('/community/{post}/bookmark', [PostController::class, 'bookmark'])->name('posts.bookmark');
-    
+
     // API routes for AJAX requests
     Route::prefix('api')->group(function () {
         Route::post('/posts/{post}/like', [\App\Http\Controllers\Api\CommunityController::class, 'likePost']);
@@ -76,7 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/posts/search', [\App\Http\Controllers\Api\CommunityController::class, 'searchPosts']);
         Route::get('/user/stats', [\App\Http\Controllers\Api\CommunityController::class, 'getUserStats']);
     });
-    
+
     // AI Chat routes
     Route::resource('ai-chat', AIChatController::class)->names([
         'index' => 'ai-chat.index',
@@ -86,7 +86,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         'destroy' => 'ai-chat.destroy',
     ]);
     Route::post('/ai-chat/{chat}/message', [AIChatController::class, 'sendMessage'])->name('ai-chat.message');
-    
+    Route::post('/ai-chat/message', [AIChatController::class, 'directMessage'])->name('ai-chat.direct-message');
+
     // Prediction routes
     Route::post('/predictions', [PredictionController::class, 'store'])->name('predictions.store');
 });
